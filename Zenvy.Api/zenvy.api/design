@@ -210,3 +210,49 @@ ClothingManagement.API
 │
 └── Controllers
     └── AuthController.cs
+
+
+Phase 1 - Foundation
+--------------------
+✔ Register
+✔ Login
+⬜ Get Current User (/auth/me)
+⬜ Change Password
+⬜ Refresh Token
+⬜ Logout
+
+Phase 2 - Security
+------------------
+⬜ Roles CRUD
+⬜ User CRUD
+⬜ Assign Role
+⬜ Activate/Deactivate User
+
+Phase 3 - Master Data
+---------------------
+⬜ Categories
+⬜ Brands
+⬜ Suppliers
+⬜ Warehouses
+
+Phase 4 - Products
+------------------
+⬜ Products
+⬜ Product Variants
+⬜ Product Images
+
+Phase 5 - Inventory
+-------------------
+⬜ Stock In
+⬜ Stock Out
+⬜ Inventory Ledger
+
+Phase 6 - Purchase
+------------------
+⬜ Purchase Orders
+⬜ Purchase Returns
+
+Phase 7 - Sales
+---------------
+⬜ Sales Orders
+⬜ Marketplace Orders
