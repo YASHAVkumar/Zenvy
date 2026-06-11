@@ -16,16 +16,37 @@ public class JwtService(IConfiguration configuration) : IJwtService
     {
         var key = Encoding.UTF8.GetBytes(_configuration?["Jwt:Key"]??"");
 
+        // var claims = new[]
+        // {
+        //     new Claim(ClaimTypes.NameIdentifier,user.UserId.ToString()),
+        //     new Claim(ClaimTypes.Email,user.Email),
+        //     new Claim("RoleId",user.RoleId.ToString())
+        // };
+
         var claims = new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier,user.UserId.ToString()),
-            new Claim(ClaimTypes.Email,user.Email),
-            new Claim("RoleId",user.RoleId.ToString())
-        };
+            {
+                new Claim(
+                    ClaimTypes.NameIdentifier,
+                    user.UserId),
+
+                new Claim(
+                    ClaimTypes.Name,
+                    user.FullName),
+
+                new Claim(
+                    ClaimTypes.Email,
+                    user.Email),
+
+                new Claim(
+                    ClaimTypes.Role,
+                    user.Role)
+            };
 
         var token =
             new JwtSecurityToken(
                 expires: DateTime.UtcNow.AddDays(7),
+                issuer: _configuration?["Jwt:Issuer"],
+                audience: _configuration?["Jwt:Audience"],
                 claims: claims,
                 signingCredentials:
                 new SigningCredentials(

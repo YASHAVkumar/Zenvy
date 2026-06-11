@@ -1,6 +1,6 @@
-namespace zenvy.domain.Entities;
+namespace zenvy.application.DTOs.Auth;
 
-public class UserProfile
+public class UserProfileResponse
 {
     public string UserId { get; set; } = string.Empty;
 

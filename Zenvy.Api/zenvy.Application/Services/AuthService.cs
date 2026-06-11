@@ -4,17 +4,18 @@ using zenvy.application.Interfaces.Repositories;
 using zenvy.application.Interfaces.Services;
 
 namespace zenvy.Application.Auth;
+
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
     private readonly IJwtService _jwtService;
     public AuthService(IUserRepository userRepository, IJwtService jwtService)
     {
-         _userRepository = userRepository;
+        _userRepository = userRepository;
         _jwtService = jwtService;
     }
-     public async Task<LoginResponse> LoginAsync(
-        LoginRequest request)
+    public async Task<LoginResponse> LoginAsync(
+       LoginRequest request)
     {
         var user =
             await _userRepository
@@ -65,4 +66,19 @@ public class AuthService : IAuthService
             Role = user.Role
         };
     }
+    public async Task<UserProfileResponse> GetProfileAsync(string userId)
+    {
+        var user =
+            await _userRepository.GetByIdAsync(
+                Guid.Parse(userId));
+
+        return new UserProfileResponse
+        {
+            UserId = user!.UserId,
+            FullName = user.FullName,
+            Email = user.Email,
+            Role = user.Role
+        };
+    }
+
 }

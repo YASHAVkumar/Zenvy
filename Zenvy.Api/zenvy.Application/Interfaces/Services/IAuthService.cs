@@ -5,5 +5,6 @@ namespace zenvy.Application.Auth
     public interface IAuthService
     {
         Task<LoginResponse> LoginAsync(LoginRequest request);
+        Task<UserProfileResponse> GetProfileAsync(string userId);
     }
 }
