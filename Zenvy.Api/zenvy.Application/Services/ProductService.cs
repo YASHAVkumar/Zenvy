@@ -16,6 +16,18 @@ public class ProductService(IProductsRepository productRepository) : IProductSer
         };
     }
 
+    public async Task<BulkCreateProductsResponse> BulkCreateProductsAsync(IReadOnlyCollection<CreateProductRequest> requests)
+    {
+        var ids = await productRepository.BulkCreateAsync(requests);
+        return new BulkCreateProductsResponse { CreatedCount = ids.Count, ProductMasterIds = [.. ids] };
+    }
+
+    public async Task<BulkUpdateProductsResponse> BulkUpdateProductsAsync(IReadOnlyCollection<BulkUpdateProductItem> requests)
+    {
+        var ids = await productRepository.BulkUpdateAsync(requests);
+        return new BulkUpdateProductsResponse { UpdatedCount = ids.Count, ProductMasterIds = [.. ids] };
+    }
+
     public Task<IEnumerable<ProductResponse>> GetProductsAsync(ProductQueryRequest request)
     {
         return productRepository.GetAllAsync(request);

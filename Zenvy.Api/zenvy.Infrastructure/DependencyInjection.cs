@@ -70,6 +70,11 @@ public static class DependencyInjection
             services.AddScoped<ISalesOrderRepository, SalesOrderRepository>();
             services.AddScoped<IPaymentRepository, PaymentRepository>();
             services.AddScoped<IShipmentRepository, ShipmentRepository>();
+            services.AddScoped<IExpenseRepository, ExpenseRepository>();
+            services.AddScoped<IProfitRepository, ProfitRepository>();
+            services.AddScoped<IEmployeeCommissionRepository, EmployeeCommissionRepository>();
+            services.AddScoped<IInvestorRepository, InvestorRepository>();
+            services.AddScoped<IDashboardRepository, DashboardRepository>();
             // Ensure your Unit of Work also accepts the string if it opens transactions
             services.AddScoped<IUnitOfWork, AdoUnitOfWork>();
         }
