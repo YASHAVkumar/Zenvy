@@ -5,7 +5,7 @@ using zenvy.application.Interfaces.Services;
 
 namespace zenvy.api.Controller;
 
-[Authorize, ApiController, Route("api/investors")]
+[Authorize, ApiController, Route("api/v{version:apiVersion}/investors")]
 public class InvestorController(IInvestorService service) : ControllerBase
 {
     [HttpPost]

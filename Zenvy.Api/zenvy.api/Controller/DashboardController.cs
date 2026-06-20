@@ -4,7 +4,7 @@ using zenvy.application.Interfaces.Services;
 
 namespace zenvy.api.Controller;
 
-[Authorize, ApiController, Route("api/dashboard")]
+[Authorize, ApiController, Route("api/v{version:apiVersion}/dashboard")]
 public class DashboardController(IDashboardService service) : ControllerBase
 {
     [HttpGet("analytics")]

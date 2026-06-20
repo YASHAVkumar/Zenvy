@@ -6,7 +6,7 @@ using zenvy.application.Interfaces.Services;
 namespace zenvy.api.Controller;
 
 [Authorize]
-[Route("api/payments")]
+[Route("api/v{version:apiVersion}/payments")]
 [ApiController]
 public class PaymentController(IPaymentService paymentService) : ControllerBase
 {

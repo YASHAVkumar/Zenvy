@@ -5,7 +5,7 @@ using zenvy.application.Interfaces.Services;
 
 namespace zenvy.api.Controller;
 [Authorize]
-[Route("api/products")]
+[Route("api/v{version:apiVersion}/products")]
 [ApiController]
 public class ProductController(IProductService productService) : ControllerBase
 {

@@ -6,7 +6,7 @@ using zenvy.application.Interfaces.Services;
 namespace zenvy.api.Controller;
 
 [Authorize]
-[Route("api/suppliers")]
+[Route("api/v{version:apiVersion}/suppliers")]
 [ApiController]
 public class SupplierController(ISupplierService supplierService) : ControllerBase
 {

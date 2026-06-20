@@ -6,7 +6,7 @@ using zenvy.application.Interfaces.Services;
 namespace zenvy.api.Controller;
 
 [Authorize]
-[Route("api/customers")]
+[Route("api/v{version:apiVersion}/customers")]
 [ApiController]
 public class CustomerController(ICustomerService customerService) : ControllerBase
 {

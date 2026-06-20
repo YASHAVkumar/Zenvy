@@ -5,7 +5,7 @@ using zenvy.application.Interfaces.Services;
 
 namespace zenvy.api.Controller;
 
-[Authorize, ApiController, Route("api/expense-types")]
+[Authorize, ApiController, Route("api/v{version:apiVersion}/expense-types")]
 public class ExpenseTypeController(IExpenseService service) : ControllerBase
 {
     [HttpPost]
@@ -19,7 +19,7 @@ public class ExpenseTypeController(IExpenseService service) : ControllerBase
     public async Task<IActionResult> GetAll() => Ok(await service.GetTypesAsync());
 }
 
-[Authorize, ApiController, Route("api/expenses")]
+[Authorize, ApiController, Route("api/v{version:apiVersion}/expenses")]
 public class ExpenseController(IExpenseService service) : ControllerBase
 {
     [HttpPost]

@@ -6,7 +6,7 @@ using zenvy.application.Interfaces.Services;
 namespace zenvy.api.Controller;
 
 [Authorize]
-[Route("api/shipments")]
+[Route("api/v{version:apiVersion}/shipments")]
 [ApiController]
 public class ShipmentController(IShipmentService shipmentService) : ControllerBase
 {

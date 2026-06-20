@@ -6,7 +6,7 @@ using zenvy.application.Interfaces.Services;
 namespace zenvy.api.Controller;
 
 [Authorize]
-[Route("api/inventory")]
+[Route("api/v{version:apiVersion}/inventory")]
 [ApiController]
 public class InventoryController(IInventoryService inventoryService) : ControllerBase
 {

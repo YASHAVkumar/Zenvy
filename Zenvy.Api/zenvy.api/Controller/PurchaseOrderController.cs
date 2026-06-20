@@ -6,7 +6,7 @@ using zenvy.application.Interfaces.Services;
 namespace zenvy.api.Controller;
 
 [Authorize]
-[Route("api/purchase-orders")]
+[Route("api/v{version:apiVersion}/purchase-orders")]
 [ApiController]
 public class PurchaseOrderController(IPurchaseOrderService purchaseOrderService) : ControllerBase
 {

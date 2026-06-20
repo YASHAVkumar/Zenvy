@@ -4,7 +4,7 @@ using zenvy.application.Interfaces.Services;
 
 namespace zenvy.api.Controller;
 
-[Authorize, ApiController, Route("api/profit")]
+[Authorize, ApiController, Route("api/v{version:apiVersion}/profit")]
 public class ProfitController(IProfitService service) : ControllerBase
 {
     [HttpGet]

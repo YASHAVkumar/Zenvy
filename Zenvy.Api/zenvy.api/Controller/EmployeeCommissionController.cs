@@ -5,7 +5,7 @@ using zenvy.application.Interfaces.Services;
 
 namespace zenvy.api.Controller;
 
-[Authorize, ApiController, Route("api/employee-commissions")]
+[Authorize, ApiController, Route("api/v{version:apiVersion}/employee-commissions")]
 public class EmployeeCommissionController(IEmployeeCommissionService service) : ControllerBase
 {
     [HttpPost]
