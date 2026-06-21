@@ -8,13 +8,13 @@ namespace zenvy.Api.Controllers.V1;
 
 [Authorize]
 [ApiController]
-[ApiVersion("1.0")]
+[ApiVersion("2.0")]
 [Route("api/v{version:apiVersion}/brands")]
-public class BrandsController : ControllerBase
+public class BrandsV2Controller : ControllerBase
 {
     private readonly IBrandService _brandService;
 
-    public BrandsController(IBrandService brandService)
+    public BrandsV2Controller(IBrandService brandService)
     {
         _brandService = brandService;
     }

@@ -37,3 +37,31 @@ public class UpdateProductStatusRequest
 {
     public bool IsActive { get; set; }
 }
+
+public class BulkCreateProductsRequest
+{
+    public List<CreateProductRequest> Products { get; set; } = [];
+}
+
+public class BulkCreateProductsResponse
+{
+    public int CreatedCount { get; set; }
+    public List<int> ProductMasterIds { get; set; } = [];
+}
+
+public class BulkUpdateProductItem
+{
+    public int ProductMasterId { get; set; }
+    public CreateProductRequest Product { get; set; } = new();
+}
+
+public class BulkUpdateProductsRequest
+{
+    public List<BulkUpdateProductItem> Products { get; set; } = [];
+}
+
+public class BulkUpdateProductsResponse
+{
+    public int UpdatedCount { get; set; }
+    public List<int> ProductMasterIds { get; set; } = [];
+}

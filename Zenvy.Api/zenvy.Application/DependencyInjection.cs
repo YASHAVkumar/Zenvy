@@ -30,6 +30,11 @@ namespace zenvy.application
             services.AddScoped<ISalesOrderService,SalesOrderService>();
             services.AddScoped<IPaymentService,PaymentService>();
             services.AddScoped<IShipmentService,ShipmentService>();
+            services.AddScoped<IExpenseService, ExpenseService>();
+            services.AddScoped<IProfitService, ProfitService>();
+            services.AddScoped<IEmployeeCommissionService, EmployeeCommissionService>();
+            services.AddScoped<IInvestorService, InvestorService>();
+            services.AddScoped<IDashboardService, DashboardService>();
             return services;
         }
     }

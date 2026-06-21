@@ -1,22 +1,22 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\zenvy\\Zenvy.Api\\",
+  "WorkspaceRootPath": "D:\\Project Local\\Zenvy\\Zenvy.Api\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{30BB2D08-AD81-6497-EE88-EA6D8FF8D1CB}|zenvy.application\\zenvy.application.csproj|d:\\zenvy\\zenvy.api\\zenvy.application\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{30BB2D08-AD81-6497-EE88-EA6D8FF8D1CB}|zenvy.application\\zenvy.application.csproj|solutionrelative:zenvy.application\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{E2054DE1-3912-86C9-CD74-688C845B2014}|zenvy.infrastructure\\zenvy.infrastructure.csproj|d:\\project local\\zenvy\\zenvy.api\\zenvy.infrastructure\\dependencyinjection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2054DE1-3912-86C9-CD74-688C845B2014}|zenvy.infrastructure\\zenvy.infrastructure.csproj|solutionrelative:zenvy.infrastructure\\dependencyinjection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E2054DE1-3912-86C9-CD74-688C845B2014}|zenvy.infrastructure\\zenvy.infrastructure.csproj|d:\\zenvy\\zenvy.api\\zenvy.infrastructure\\services\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{9CEDA8F4-4F72-01EB-89B0-9E3ED815DE68}|zenvy.api\\zenvy.api.csproj|d:\\project local\\zenvy\\zenvy.api\\zenvy.api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{9CEDA8F4-4F72-01EB-89B0-9E3ED815DE68}|zenvy.api\\zenvy.api.csproj|solutionrelative:zenvy.api\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E2054DE1-3912-86C9-CD74-688C845B2014}|zenvy.infrastructure\\zenvy.infrastructure.csproj|d:\\project local\\zenvy\\zenvy.api\\zenvy.infrastructure\\services\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E2054DE1-3912-86C9-CD74-688C845B2014}|zenvy.infrastructure\\zenvy.infrastructure.csproj|solutionrelative:zenvy.infrastructure\\services\\jwtservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9CEDA8F4-4F72-01EB-89B0-9E3ED815DE68}|zenvy.api\\zenvy.api.csproj|d:\\zenvy\\zenvy.api\\zenvy.api\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "AbsoluteMoniker": "D:0:0:{9CEDA8F4-4F72-01EB-89B0-9E3ED815DE68}|zenvy.api\\zenvy.api.csproj|d:\\project local\\zenvy\\zenvy.api\\zenvy.api\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{9CEDA8F4-4F72-01EB-89B0-9E3ED815DE68}|zenvy.api\\zenvy.api.csproj|solutionrelative:zenvy.api\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{E2054DE1-3912-86C9-CD74-688C845B2014}|zenvy.infrastructure\\zenvy.infrastructure.csproj|d:\\zenvy\\zenvy.api\\zenvy.infrastructure\\dependencyinjection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{E2054DE1-3912-86C9-CD74-688C845B2014}|zenvy.infrastructure\\zenvy.infrastructure.csproj|solutionrelative:zenvy.infrastructure\\dependencyinjection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,59 +26,103 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 11,
           "Children": [
             {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "appsettings.Development.json",
-              "DocumentMoniker": "D:\\zenvy\\Zenvy.Api\\zenvy.api\\appsettings.Development.json",
-              "RelativeDocumentMoniker": "zenvy.api\\appsettings.Development.json",
-              "ToolTip": "D:\\zenvy\\Zenvy.Api\\zenvy.api\\appsettings.Development.json",
-              "RelativeToolTip": "zenvy.api\\appsettings.Development.json",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAsAAAA7AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-06-10T19:47:31.354Z",
-              "EditorCaption": ""
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{116d2292-e37d-41cd-a077-ebacac4c8cc4}"
             },
             {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "AuthService.cs",
-              "DocumentMoniker": "D:\\zenvy\\Zenvy.Api\\zenvy.Application\\Services\\AuthService.cs",
-              "RelativeDocumentMoniker": "zenvy.Application\\Services\\AuthService.cs",
-              "ToolTip": "D:\\zenvy\\Zenvy.Api\\zenvy.Application\\Services\\AuthService.cs",
-              "RelativeToolTip": "zenvy.Application\\Services\\AuthService.cs",
-              "ViewState": "AgIAADcAAAAAAAAAAAAgwD4AAAAlAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-10T19:35:22.228Z",
-              "EditorCaption": ""
+              "$type": "Bookmark",
+              "Name": "ST:131:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:132:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:131:0:{75188d03-9892-4ae2-abf1-207126247ce5}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:130:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "JwtService.cs",
-              "DocumentMoniker": "D:\\zenvy\\Zenvy.Api\\zenvy.Infrastructure\\Services\\JwtService.cs",
-              "RelativeDocumentMoniker": "zenvy.Infrastructure\\Services\\JwtService.cs",
-              "ToolTip": "D:\\zenvy\\Zenvy.Api\\zenvy.Infrastructure\\Services\\JwtService.cs",
-              "RelativeToolTip": "zenvy.Infrastructure\\Services\\JwtService.cs",
-              "ViewState": "AgIAABcAAAAAAAAAAAAgwCIAAAAIAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-10T19:33:10.92Z",
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.api\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "zenvy.api\\Properties\\launchSettings.json",
+              "ToolTip": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.api\\Properties\\launchSettings.json",
+              "RelativeToolTip": "zenvy.api\\Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-06-20T12:32:24.179Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.api\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "zenvy.api\\appsettings.Development.json",
+              "ToolTip": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.api\\appsettings.Development.json",
+              "RelativeToolTip": "zenvy.api\\appsettings.Development.json",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAsAAAA7AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-06-10T19:47:31.354Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "JwtService.cs",
+              "DocumentMoniker": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.Infrastructure\\Services\\JwtService.cs",
+              "RelativeDocumentMoniker": "zenvy.Infrastructure\\Services\\JwtService.cs",
+              "ToolTip": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.Infrastructure\\Services\\JwtService.cs",
+              "RelativeToolTip": "zenvy.Infrastructure\\Services\\JwtService.cs",
+              "ViewState": "AgIAABcAAAAAAAAAAAAgwCIAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-10T19:33:10.92Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
               "Title": "DependencyInjection.cs",
-              "DocumentMoniker": "D:\\zenvy\\Zenvy.Api\\zenvy.Infrastructure\\DependencyInjection.cs",
+              "DocumentMoniker": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.Infrastructure\\DependencyInjection.cs",
               "RelativeDocumentMoniker": "zenvy.Infrastructure\\DependencyInjection.cs",
-              "ToolTip": "D:\\zenvy\\Zenvy.Api\\zenvy.Infrastructure\\DependencyInjection.cs",
+              "ToolTip": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.Infrastructure\\DependencyInjection.cs",
               "RelativeToolTip": "zenvy.Infrastructure\\DependencyInjection.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAowAwAAAAsAAAAAAAAAA==",
+              "ViewState": "AgIAABUAAAAAAAAAAAAowAsAAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-10T12:33:56.221Z",
               "EditorCaption": ""
+            }
+          ]
+        },
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
             }
           ]
         }

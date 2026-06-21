@@ -5,7 +5,7 @@ using zenvy.application.Interfaces.Repositories;
 using zenvy.application.Interfaces.Services;
 
 namespace zenvy.api.Controller;
-[Route("api/users")]
+[Route("api/v{version:apiVersion}/users")]
 [ApiController]
 public class UserController(IUserService userService) : ControllerBase
 {

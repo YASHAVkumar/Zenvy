@@ -7,7 +7,7 @@ using zenvy.Domain.DTOs;
 
 namespace zenvy.api.Controller;
 
-[Route("api/auth")]
+[Route("api/v{version:apiVersion}/auth")]
 [ApiController]
 public class AuthController(IAuthService authService) : ControllerBase
 {

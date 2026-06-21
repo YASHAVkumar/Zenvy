@@ -6,7 +6,7 @@ using zenvy.application.Interfaces.Services;
 namespace zenvy.api.Controller;
 
 [Authorize]
-[Route("api/sales-orders")]
+[Route("api/v{version:apiVersion}/sales-orders")]
 [ApiController]
 public class SalesOrderController(ISalesOrderService salesOrderService) : ControllerBase
 {

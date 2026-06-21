@@ -5,7 +5,7 @@ using zenvy.application.Interfaces.Services;
 
 namespace zenvy.api.Controller;
 [Authorize]
-[Route("api/products")]
+[Route("api/v{version:apiVersion}/products")]
 [ApiController]
 public class ProductController(IProductService productService) : ControllerBase
 {
@@ -16,6 +16,28 @@ public class ProductController(IProductService productService) : ControllerBase
     {
         var response = await _productService.CreateProductAsync(request);
         return Ok(response);
+    }
+
+    [HttpPost("bulk")]
+    public async Task<IActionResult> BulkCreateProducts([FromBody] BulkCreateProductsRequest request)
+    {
+        if (request.Products.Count == 0) return BadRequest("At least one product is required.");
+        if (request.Products.Count > 100) return BadRequest("A maximum of 100 products is allowed per request.");
+        if (request.Products.Any(x => string.IsNullOrWhiteSpace(x.ProductMaster.ProductCode) || string.IsNullOrWhiteSpace(x.ProductMaster.ProductName)))
+            return BadRequest("ProductCode and ProductName are required for every product.");
+        return Ok(await _productService.BulkCreateProductsAsync(request.Products));
+    }
+
+    [HttpPut("bulk")]
+    public async Task<IActionResult> BulkUpdateProducts([FromBody] BulkUpdateProductsRequest request)
+    {
+        if (request.Products.Count == 0) return BadRequest("At least one product is required.");
+        if (request.Products.Count > 100) return BadRequest("A maximum of 100 products is allowed per request.");
+        if (request.Products.Any(x => x.ProductMasterId <= 0 || string.IsNullOrWhiteSpace(x.Product.ProductMaster.ProductName)))
+            return BadRequest("A valid ProductMasterId and ProductName are required for every product.");
+        if (request.Products.Select(x => x.ProductMasterId).Distinct().Count() != request.Products.Count)
+            return BadRequest("Duplicate ProductMasterId values are not allowed.");
+        return Ok(await _productService.BulkUpdateProductsAsync(request.Products));
     }
 
     [HttpGet]

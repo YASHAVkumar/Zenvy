@@ -76,6 +76,50 @@ public class ProductsRepository(IConfiguration configuration) : IProductsReposit
         }
     }
 
+    public async Task<IReadOnlyList<int>> BulkCreateAsync(IReadOnlyCollection<CreateProductRequest> requests)
+    {
+        using var connection = new SqlConnection(sqlConnectionString);
+        await connection.OpenAsync();
+        using var transaction = connection.BeginTransaction();
+        try
+        {
+            var ids = new List<int>(requests.Count);
+            foreach (var request in requests)
+                ids.Add(await CreateWithinTransactionAsync(connection, transaction, request));
+            transaction.Commit();
+            return ids;
+        }
+        catch
+        {
+            TryRollback(transaction);
+            throw;
+        }
+    }
+
+    public async Task<IReadOnlyList<int>> BulkUpdateAsync(IReadOnlyCollection<BulkUpdateProductItem> requests)
+    {
+        using var connection = new SqlConnection(sqlConnectionString);
+        await connection.OpenAsync();
+        using var transaction = connection.BeginTransaction();
+        try
+        {
+            var ids = new List<int>(requests.Count);
+            foreach (var item in requests)
+            {
+                if (!await UpdateWithinTransactionAsync(connection, transaction, item.ProductMasterId, item.Product))
+                    throw new InvalidOperationException($"Product {item.ProductMasterId} was not found.");
+                ids.Add(item.ProductMasterId);
+            }
+            transaction.Commit();
+            return ids;
+        }
+        catch
+        {
+            TryRollback(transaction);
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<ProductResponse>> GetAllAsync(ProductQueryRequest request)
     {
         try
@@ -199,6 +243,7 @@ WHERE p.ProductMasterId = @ProductMasterId;", connection))
                 using (var command = new SqlCommand(@"
 UPDATE ProductMasters
 SET
+    ProductCode = @ProductCode,
     ProductName = @ProductName,
     CategoryId = @CategoryId,
     BrandId = @BrandId,
@@ -209,6 +254,7 @@ SET
 WHERE ProductMasterId = @ProductMasterId;", connection, transaction))
                 {
                     command.Parameters.AddWithValue("@ProductMasterId", productMasterId);
+                    command.Parameters.AddWithValue("@ProductCode", request.ProductMaster.ProductCode);
                     command.Parameters.AddWithValue("@ProductName", request.ProductMaster.ProductName);
                     command.Parameters.AddWithValue("@CategoryId", request.ProductMaster.CategoryId);
                     command.Parameters.AddWithValue("@BrandId", (object?)request.ProductMaster.BrandId ?? DBNull.Value);
@@ -403,6 +449,59 @@ ORDER BY ProductName;", connection);
         return table;
     }
 
+    private static async Task<int> CreateWithinTransactionAsync(SqlConnection connection, SqlTransaction transaction, CreateProductRequest request)
+    {
+        using var command = new SqlCommand("usp_CreateProduct", connection, transaction) { CommandType = CommandType.StoredProcedure };
+        command.Parameters.AddWithValue("@ProductCode", request.ProductMaster.ProductCode);
+        command.Parameters.AddWithValue("@ProductName", request.ProductMaster.ProductName);
+        command.Parameters.AddWithValue("@CategoryId", request.ProductMaster.CategoryId);
+        command.Parameters.AddWithValue("@BrandId", (object?)request.ProductMaster.BrandId ?? DBNull.Value);
+        command.Parameters.AddWithValue("@Description", (object?)request.ProductMaster.Description ?? DBNull.Value);
+        command.Parameters.AddWithValue("@HSNCode", (object?)request.ProductMaster.HSNCode ?? DBNull.Value);
+        command.Parameters.AddWithValue("@GSTPercentage", request.ProductMaster.GSTPercentage);
+        command.Parameters.AddWithValue("@CreatedBy", "1");
+        var variants = command.Parameters.AddWithValue("@Variants", CreateVariantTable(request.ProductVariants));
+        variants.SqlDbType = SqlDbType.Structured;
+        variants.TypeName = "dbo.ProductVariantType";
+        var images = command.Parameters.AddWithValue("@Images", CreateImageTable(request.ProductImages));
+        images.SqlDbType = SqlDbType.Structured;
+        images.TypeName = "dbo.ProductImageType";
+        using var reader = await command.ExecuteReaderAsync();
+        if (!await reader.ReadAsync()) throw new InvalidOperationException("Product creation did not return an identifier.");
+        return Convert.ToInt32(reader["ProductMasterId"]);
+    }
+
+    private static async Task<bool> UpdateWithinTransactionAsync(SqlConnection connection, SqlTransaction transaction, int productMasterId, CreateProductRequest request)
+    {
+        using (var command = new SqlCommand(@"
+UPDATE ProductMasters SET ProductCode=@ProductCode, ProductName=@ProductName, CategoryId=@CategoryId, BrandId=@BrandId,
+Description=@Description, HSNCode=@HSNCode, GSTPercentage=@GSTPercentage, IsActive=@IsActive
+WHERE ProductMasterId=@ProductMasterId;", connection, transaction))
+        {
+            command.Parameters.AddWithValue("@ProductMasterId", productMasterId);
+            command.Parameters.AddWithValue("@ProductCode", request.ProductMaster.ProductCode);
+            command.Parameters.AddWithValue("@ProductName", request.ProductMaster.ProductName);
+            command.Parameters.AddWithValue("@CategoryId", request.ProductMaster.CategoryId);
+            command.Parameters.AddWithValue("@BrandId", (object?)request.ProductMaster.BrandId ?? DBNull.Value);
+            command.Parameters.AddWithValue("@Description", (object?)request.ProductMaster.Description ?? DBNull.Value);
+            command.Parameters.AddWithValue("@HSNCode", (object?)request.ProductMaster.HSNCode ?? DBNull.Value);
+            command.Parameters.AddWithValue("@GSTPercentage", request.ProductMaster.GSTPercentage);
+            command.Parameters.AddWithValue("@IsActive", request.ProductMaster.IsActive);
+            if (await command.ExecuteNonQueryAsync() == 0) return false;
+        }
+
+        using (var command = new SqlCommand("UPDATE Products SET IsActive=@IsActive WHERE ProductMasterId=@ProductMasterId", connection, transaction))
+        {
+            command.Parameters.AddWithValue("@ProductMasterId", productMasterId);
+            command.Parameters.AddWithValue("@IsActive", request.ProductMaster.IsActive);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        await ReplaceImagesAsync(connection, transaction, productMasterId, request.ProductImages);
+        await ReplaceVariantsAsync(connection, transaction, productMasterId, request.ProductVariants);
+        return true;
+    }
+
     private static DataTable CreateImageTable(IEnumerable<ProductImages> images)
     {
         var table = new DataTable();
@@ -523,32 +622,63 @@ VALUES (@ProductMasterId, @ProductId, @ImageUrl, @IsPrimary, GETDATE());", conne
         var productId = await GetProductIdAsync(connection, transaction, productMasterId);
         if (productId == null) return;
 
-        using (var deleteCommand = new SqlCommand("DELETE FROM ProductVariants WHERE ProductMasterId = @ProductMasterId", connection, transaction))
+        var incoming = variants.ToList();
+        foreach (var variant in incoming)
         {
-            deleteCommand.Parameters.AddWithValue("@ProductMasterId", productMasterId);
-            await deleteCommand.ExecuteNonQueryAsync();
-        }
+            using var updateCommand = new SqlCommand(@"
+UPDATE ProductVariants SET Barcode=@Barcode, Size=@Size, Color=@Color, Material=@Material,
+Gender=@Gender, Season=@Season, CurrentPrice=@CurrentPrice, Status=@Status
+WHERE ProductMasterId=@ProductMasterId AND SKU=@SKU;", connection, transaction);
+            AddVariantParameters(updateCommand, productMasterId, variant);
+            if (await updateCommand.ExecuteNonQueryAsync() > 0) continue;
 
-        foreach (var variant in variants)
-        {
             using var insertCommand = new SqlCommand(@"
 INSERT INTO ProductVariants (ProductMasterId, ProductId, SKU, Barcode, Size, Color, Material, Gender, Season, CurrentPrice, Status)
 VALUES (@ProductMasterId, @ProductId, @SKU, @Barcode, @Size, @Color, @Material, @Gender, @Season, @CurrentPrice, @Status);", connection, transaction);
-
-            insertCommand.Parameters.AddWithValue("@ProductMasterId", productMasterId);
             insertCommand.Parameters.AddWithValue("@ProductId", productId.Value);
-            insertCommand.Parameters.AddWithValue("@SKU", variant.SKU);
-            insertCommand.Parameters.AddWithValue("@Barcode", (object?)variant.Barcode ?? DBNull.Value);
-            insertCommand.Parameters.AddWithValue("@Size", (object?)variant.Size ?? DBNull.Value);
-            insertCommand.Parameters.AddWithValue("@Color", (object?)variant.Color ?? DBNull.Value);
-            insertCommand.Parameters.AddWithValue("@Material", (object?)variant.Material ?? DBNull.Value);
-            insertCommand.Parameters.AddWithValue("@Gender", (object?)variant.Gender ?? DBNull.Value);
-            insertCommand.Parameters.AddWithValue("@Season", (object?)variant.Season ?? DBNull.Value);
-            insertCommand.Parameters.AddWithValue("@CurrentPrice", variant.CurrentPrice);
-            insertCommand.Parameters.AddWithValue("@Status", variant.Status);
-
+            AddVariantParameters(insertCommand, productMasterId, variant);
             await insertCommand.ExecuteNonQueryAsync();
         }
+
+        using var deactivateCommand = new SqlCommand { Connection = connection, Transaction = transaction };
+        deactivateCommand.Parameters.AddWithValue("@ProductMasterId", productMasterId);
+        if (incoming.Count == 0)
+        {
+            deactivateCommand.CommandText = "UPDATE ProductVariants SET Status=0 WHERE ProductMasterId=@ProductMasterId";
+        }
+        else
+        {
+            var parameterNames = new List<string>(incoming.Count);
+            for (var index = 0; index < incoming.Count; index++)
+            {
+                var name = $"@Sku{index}";
+                parameterNames.Add(name);
+                deactivateCommand.Parameters.AddWithValue(name, incoming[index].SKU);
+            }
+            deactivateCommand.CommandText = $"UPDATE ProductVariants SET Status=0 WHERE ProductMasterId=@ProductMasterId AND SKU NOT IN ({string.Join(',', parameterNames)})";
+        }
+        await deactivateCommand.ExecuteNonQueryAsync();
+    }
+
+    private static void AddVariantParameters(SqlCommand command, int productMasterId, ProductVariants variant)
+    {
+        command.Parameters.AddWithValue("@ProductMasterId", productMasterId);
+        command.Parameters.AddWithValue("@SKU", variant.SKU);
+        command.Parameters.AddWithValue("@Barcode", (object?)variant.Barcode ?? DBNull.Value);
+        command.Parameters.AddWithValue("@Size", (object?)variant.Size ?? DBNull.Value);
+        command.Parameters.AddWithValue("@Color", (object?)variant.Color ?? DBNull.Value);
+        command.Parameters.AddWithValue("@Material", (object?)variant.Material ?? DBNull.Value);
+        command.Parameters.AddWithValue("@Gender", (object?)variant.Gender ?? DBNull.Value);
+        command.Parameters.AddWithValue("@Season", (object?)variant.Season ?? DBNull.Value);
+        command.Parameters.AddWithValue("@CurrentPrice", variant.CurrentPrice);
+        command.Parameters.AddWithValue("@Status", variant.Status);
+    }
+
+    private static void TryRollback(SqlTransaction transaction)
+    {
+        try { transaction.Rollback(); }
+        catch (InvalidOperationException) { }
+        catch (SqlException) { }
     }
 
     private static async Task<int?> GetProductIdAsync(SqlConnection connection, SqlTransaction transaction, int productMasterId)

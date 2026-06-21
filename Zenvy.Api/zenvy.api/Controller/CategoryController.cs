@@ -5,7 +5,7 @@ using zenvy.Application.Interfaces.Services;
 
 [Authorize]
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/v{version:apiVersion}/[controller]")]
 public class CategoriesController(ICategoryService categoryService) : ControllerBase
 {
     private readonly ICategoryService categoryService = categoryService;
