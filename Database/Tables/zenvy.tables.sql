@@ -19,21 +19,37 @@ GO
 /* =====================================================
    USER
 ===================================================== */
-CREATE TABLE Users
+CREATE TABLE [dbo].[Users](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[UserId] [nchar](150) NOT NULL,
+	[RoleId] [int] NOT NULL,
+	[Role] [nchar](100) NULL,
+	[FullName] [nvarchar](150) NOT NULL,
+	[Email] [nvarchar](150) NOT NULL,
+	[Phone] [nvarchar](20) NULL,
+	[PasswordHash] [nvarchar](max) NOT NULL,
+	[IsActive] [bit] NOT NULL,
+	[CreatedAt] [datetime2](7) NOT NULL,
+ CONSTRAINT [PK__Users__1788CC4CCBC9A35C] PRIMARY KEY CLUSTERED 
 (
-    UserId INT IDENTITY(1,1) PRIMARY KEY,
-    RoleId INT NOT NULL,
-    FullName NVARCHAR(150) NOT NULL,
-    Email NVARCHAR(150) NOT NULL UNIQUE,
-    Phone NVARCHAR(20),
-    PasswordHash NVARCHAR(MAX) NOT NULL,
-    IsActive BIT NOT NULL DEFAULT 1,
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
 
-    CONSTRAINT FK_Users_Roles
+ALTER TABLE [dbo].[Users] ADD  CONSTRAINT [DF__Users__IsActive__4F7CD00D]  DEFAULT ((1)) FOR [IsActive]
+GO
+
+ALTER TABLE [dbo].[Users] ADD  CONSTRAINT [DF__Users__CreatedAt__5070F446]  DEFAULT (getdate()) FOR [CreatedAt]
+GO
+
+ ALTER TABLE [dbo].[Users] ADD   CONSTRAINT FK_Users_Roles
         FOREIGN KEY(RoleId)
         REFERENCES Roles(RoleId)
-);
+
+GO
+ALTER TABLE users
+ADD CONSTRAINT FK_UserId_Roles UNIQUE (userid);
 GO
 
 /* =====================================================
@@ -123,7 +139,7 @@ CREATE TABLE ProductMasters
     HSNCode NVARCHAR(20),
     GSTPercentage DECIMAL(5,2) NOT NULL DEFAULT 0,
     IsActive BIT NOT NULL DEFAULT 1,
-    CreatedBy VARCHAR(50) NULL,
+    CreatedBy varchar(150) NULL,
     CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
 
     CONSTRAINT FK_ProductMaster_Category
@@ -298,7 +314,7 @@ CREATE TABLE InventoryTransactions
     ReferenceType NVARCHAR(50),
     ReferenceId BIGINT,
 
-    CreatedBy INT NULL,
+    CreatedBy varchar(150) NULL,
     CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
 
     CONSTRAINT FK_InventoryTransaction_Variant
@@ -414,7 +430,7 @@ CREATE TABLE PurchaseOrders
     TaxAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
     GrandTotal DECIMAL(18,2) NOT NULL DEFAULT 0,
 
-    CreatedBy INT NOT NULL,
+    CreatedBy varchar(150) NOT NULL,
     CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
 
     CONSTRAINT FK_PO_Supplier
@@ -470,7 +486,7 @@ CREATE TABLE SalesOrders
     CustomerId INT NULL,
     ChannelId INT NOT NULL,
 
-    CreatedBy INT NOT NULL,
+    CreatedBy varchar(150) NOT NULL,
 
     ExternalOrderId NVARCHAR(100),
 
@@ -645,7 +661,7 @@ CREATE TABLE SalesReturns
     ReturnShippingFee DECIMAL(18,2) NOT NULL DEFAULT 0,
     MarketplaceFee DECIMAL(18,2) NOT NULL DEFAULT 0,
     DeliveryFeeRefunded BIT NOT NULL DEFAULT 0,
-    CreatedBy INT NULL,
+    CreatedBy varchar(150) NULL,
     Notes NVARCHAR(500),
     CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
 
@@ -708,7 +724,7 @@ CREATE TABLE Expenses
 
     ExpenseDate DATETIME2 NOT NULL,
 
-    CreatedBy INT NOT NULL,
+    CreatedBy varchar(150) NOT NULL,
 
     CONSTRAINT FK_Expense_Type
         FOREIGN KEY(ExpenseTypeId)
@@ -728,7 +744,7 @@ CREATE TABLE EmployeeCommissions
 (
     CommissionId BIGINT IDENTITY(1,1) PRIMARY KEY,
 
-    UserId INT NOT NULL,
+    UserId varchar(150) NOT NULL,
 
     OrderId BIGINT NOT NULL,
 
@@ -795,4 +811,32 @@ CREATE TABLE ProfitDistributions
         FOREIGN KEY(InvestorId)
         REFERENCES Investors(InvestorId)
 );
+GO
+
+/* ============================================
+   API AUDIT LOG
+============================================ */
+CREATE TABLE ApiAuditLogs
+(
+    AuditId BIGINT IDENTITY(1,1) PRIMARY KEY,
+    TraceId NVARCHAR(100) NOT NULL,
+    UserId varchar(150) NULL,
+    HttpMethod NVARCHAR(10) NOT NULL,
+    Path NVARCHAR(2048) NOT NULL,
+    QueryString NVARCHAR(2048) NULL,
+    StatusCode INT NOT NULL,
+    DurationMs BIGINT NOT NULL,
+    IpAddress NVARCHAR(64) NULL,
+    UserAgent NVARCHAR(512) NULL,
+    ExceptionType NVARCHAR(500) NULL,
+    ErrorMessage NVARCHAR(2048) NULL,
+    ErrorDetails NVARCHAR(MAX) NULL,
+    CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_ApiAuditLogs_CreatedAt DEFAULT SYSUTCDATETIME(),
+    CONSTRAINT FK_ApiAuditLogs_User FOREIGN KEY(UserId) REFERENCES Users(UserId)
+);
+GO
+
+CREATE INDEX IX_ApiAuditLogs_CreatedAt ON ApiAuditLogs(CreatedAt DESC);
+CREATE INDEX IX_ApiAuditLogs_TraceId ON ApiAuditLogs(TraceId);
+CREATE INDEX IX_ApiAuditLogs_UserId_CreatedAt ON ApiAuditLogs(UserId, CreatedAt DESC);
 GO

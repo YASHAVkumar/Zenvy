@@ -27,7 +27,7 @@ public class ReturnRepository(IConfiguration configuration) : IReturnRepository
         command.Parameters.AddWithValue("@ReturnShippingFee", request.ReturnShippingFee);
         command.Parameters.AddWithValue("@MarketplaceFee", request.MarketplaceFee);
         command.Parameters.AddWithValue("@DeliveryFeeRefunded", request.DeliveryFeeRefunded);
-        command.Parameters.AddWithValue("@CreatedBy", (object?)request.CreatedBy ?? DBNull.Value);
+        command.Parameters.AddWithValue("@CreatedBy", Guid.TryParse(request.CreatedBy, out var createdBy) ? createdBy : DBNull.Value);
         command.Parameters.AddWithValue("@Notes", (object?)request.Notes ?? DBNull.Value);
         command.Parameters.AddWithValue("@LinesJson", JsonSerializer.Serialize(request.Lines));
 
@@ -129,7 +129,7 @@ public class ReturnRepository(IConfiguration configuration) : IReturnRepository
             ReturnShippingFee = reader.GetDecimal(reader.GetOrdinal("ReturnShippingFee")),
             MarketplaceFee = reader.GetDecimal(reader.GetOrdinal("MarketplaceFee")),
             DeliveryFeeRefunded = reader.GetBoolean(reader.GetOrdinal("DeliveryFeeRefunded")),
-            CreatedBy = reader.IsDBNull(reader.GetOrdinal("CreatedBy")) ? null : reader.GetInt32(reader.GetOrdinal("CreatedBy")),
+            CreatedBy = reader.IsDBNull(reader.GetOrdinal("CreatedBy")) ? null : reader.GetGuid(reader.GetOrdinal("CreatedBy")).ToString(),
             Notes = reader.IsDBNull(reader.GetOrdinal("Notes")) ? null : reader.GetString(reader.GetOrdinal("Notes")),
             CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAt"))
         };

@@ -78,7 +78,7 @@ public class InventoryRepository(IConfiguration configuration) : IInventoryRepos
         command.Parameters.AddWithValue("@Quantity", request.Quantity);
         command.Parameters.AddWithValue("@ReferenceType", (object?)request.ReferenceType ?? DBNull.Value);
         command.Parameters.AddWithValue("@ReferenceId", (object?)request.ReferenceId ?? DBNull.Value);
-        command.Parameters.AddWithValue("@CreatedBy", (object?)request.CreatedBy ?? DBNull.Value);
+        command.Parameters.AddWithValue("@CreatedBy", Guid.TryParse(request.CreatedBy, out var createdBy) ? createdBy : DBNull.Value);
 
         return await command.ExecuteNonQueryAsync() > 0;
     }
@@ -94,7 +94,7 @@ public class InventoryRepository(IConfiguration configuration) : IInventoryRepos
         command.Parameters.AddWithValue("@Quantity", request.Quantity);
         command.Parameters.AddWithValue("@ReferenceType", (object?)request.ReferenceType ?? DBNull.Value);
         command.Parameters.AddWithValue("@ReferenceId", (object?)request.ReferenceId ?? DBNull.Value);
-        command.Parameters.AddWithValue("@CreatedBy", (object?)request.CreatedBy ?? DBNull.Value);
+        command.Parameters.AddWithValue("@CreatedBy", Guid.TryParse(request.CreatedBy, out var createdBy) ? createdBy : DBNull.Value);
 
         return await command.ExecuteNonQueryAsync() > 0;
     }
@@ -111,7 +111,7 @@ public class InventoryRepository(IConfiguration configuration) : IInventoryRepos
         command.Parameters.AddWithValue("@Quantity", request.Quantity);
         command.Parameters.AddWithValue("@ReferenceType", (object?)request.ReferenceType ?? DBNull.Value);
         command.Parameters.AddWithValue("@ReferenceId", (object?)request.ReferenceId ?? DBNull.Value);
-        command.Parameters.AddWithValue("@CreatedBy", (object?)request.CreatedBy ?? DBNull.Value);
+        command.Parameters.AddWithValue("@CreatedBy", Guid.TryParse(request.CreatedBy, out var createdBy) ? createdBy : DBNull.Value);
 
         return await command.ExecuteNonQueryAsync() > 0;
     }
@@ -193,7 +193,7 @@ public class InventoryRepository(IConfiguration configuration) : IInventoryRepos
             Quantity = reader.GetInt32(reader.GetOrdinal("Quantity")),
             ReferenceType = reader.IsDBNull(reader.GetOrdinal("ReferenceType")) ? null : reader.GetString(reader.GetOrdinal("ReferenceType")),
             ReferenceId = reader.IsDBNull(reader.GetOrdinal("ReferenceId")) ? null : reader.GetInt64(reader.GetOrdinal("ReferenceId")),
-            CreatedBy = reader.IsDBNull(reader.GetOrdinal("CreatedBy")) ? null : reader.GetInt32(reader.GetOrdinal("CreatedBy")),
+            CreatedBy = reader.IsDBNull(reader.GetOrdinal("CreatedBy")) ? null : reader.GetGuid(reader.GetOrdinal("CreatedBy")).ToString(),
             CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAt"))
         };
     }

@@ -30,11 +30,13 @@ CREATE OR ALTER PROCEDURE dbo.usp_CreateExpense
     @Amount DECIMAL(18,2),
     @Description NVARCHAR(500) = NULL,
     @ExpenseDate DATETIME2,
-    @CreatedBy INT
+    @CreatedBy varchar(150)
 AS
 BEGIN
     SET NOCOUNT ON;
     IF @Amount <= 0 THROW 50202, 'Expense amount must be greater than zero.', 1;
+    IF NOT EXISTS (SELECT 1 FROM Users WHERE UserId = @CreatedBy AND IsActive = 1)
+        THROW 50204, 'Active creating user not found.', 1;
     INSERT INTO Expenses (ExpenseTypeId, Amount, Description, ExpenseDate, CreatedBy)
     VALUES (@ExpenseTypeId, @Amount, @Description, @ExpenseDate, @CreatedBy);
     SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS ExpenseId;
@@ -100,13 +102,15 @@ END;
 GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_CreateEmployeeCommission
-    @UserId INT,
+    @UserId varchar(150),
     @OrderId BIGINT,
     @CommissionPercent DECIMAL(5,2)
 AS
 BEGIN
     SET NOCOUNT ON;
     IF @CommissionPercent <= 0 OR @CommissionPercent > 100 THROW 50210, 'Commission percent must be between 0 and 100.', 1;
+    IF NOT EXISTS (SELECT 1 FROM Users WHERE UserId = @UserId AND IsActive = 1)
+        THROW 50213, 'Active employee user not found.', 1;
     IF EXISTS (SELECT 1 FROM EmployeeCommissions WHERE UserId = @UserId AND OrderId = @OrderId)
         THROW 50211, 'Commission already exists for this employee and order.', 1;
     DECLARE @OrderAmount DECIMAL(18,2);
@@ -119,7 +123,7 @@ END;
 GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_GetEmployeeCommissions
-    @UserId INT = NULL, @FromDate DATETIME2 = NULL, @ToDate DATETIME2 = NULL
+    @UserId varchar(150) = NULL, @FromDate DATETIME2 = NULL, @ToDate DATETIME2 = NULL
 AS
 BEGIN
     SET NOCOUNT ON;

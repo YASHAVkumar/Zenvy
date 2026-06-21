@@ -1,12 +1,30 @@
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi;
 using zenvy.application;
+using zenvy.api.Infrastructure;
 using zenvy.infrastructure;
+using zenvy.shared.Reponses;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => options.Filters.Add<ApiResponseFilter>())
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Where(item => item.Value?.Errors.Count > 0)
+                .ToDictionary(
+                    item => item.Key,
+                    item => item.Value!.Errors.Select(error => error.ErrorMessage).ToArray());
+            return new BadRequestObjectResult(ApiResponse<object>.Failed(
+                "One or more validation errors occurred.",
+                context.HttpContext.TraceIdentifier,
+                errors));
+        };
+    });
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
@@ -81,6 +99,26 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseStatusCodePages(async statusContext =>
+{
+    var response = statusContext.HttpContext.Response;
+    if (response.ContentLength is > 0 || !string.IsNullOrEmpty(response.ContentType)) return;
+
+    var message = response.StatusCode switch
+    {
+        StatusCodes.Status401Unauthorized => "Authentication is required.",
+        StatusCodes.Status403Forbidden => "You are not authorized to perform this action.",
+        StatusCodes.Status404NotFound => "The requested resource was not found.",
+        _ => "The request could not be completed."
+    };
+    response.ContentType = "application/json";
+    await response.WriteAsJsonAsync(ApiResponse<object>.Failed(
+        message,
+        statusContext.HttpContext.TraceIdentifier));
+});
+
+app.UseMiddleware<ApiAuditMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

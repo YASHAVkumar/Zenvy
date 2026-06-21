@@ -17,7 +17,7 @@ public class ExpenseRequest
     public decimal Amount { get; set; }
     public string? Description { get; set; }
     public DateTime ExpenseDate { get; set; } = DateTime.UtcNow;
-    public int CreatedBy { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
 }
 
 public class ExpenseResponse : ExpenseRequest
@@ -62,7 +62,7 @@ public record AmountSource(decimal Amount);
 
 public class EmployeeCommissionRequest
 {
-    public int UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
     public long OrderId { get; set; }
     public decimal CommissionPercent { get; set; }
 }

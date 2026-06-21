@@ -69,12 +69,15 @@ CREATE OR ALTER PROCEDURE dbo.usp_CreatePurchaseOrder
     @OrderDate DATETIME2,
     @ExpectedDate DATETIME2 = NULL,
     @Status NVARCHAR(50),
-    @CreatedBy INT,
+    @CreatedBy varchar(150),
     @LinesJson NVARCHAR(MAX)
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM Users WHERE UserId = @CreatedBy AND IsActive = 1)
+        THROW 50104, 'Active creating user not found.', 1;
 
     DECLARE @Lines TABLE
     (
@@ -227,7 +230,7 @@ GO
 CREATE OR ALTER PROCEDURE dbo.usp_CreateSalesOrder
     @CustomerId INT = NULL,
     @ChannelId INT,
-    @CreatedBy INT,
+    @CreatedBy varchar(150),
     @ExternalOrderId NVARCHAR(100) = NULL,
     @OrderDate DATETIME2,
     @Status NVARCHAR(50),
@@ -237,6 +240,9 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM Users WHERE UserId = @CreatedBy AND IsActive = 1)
+        THROW 50114, 'Active creating user not found.', 1;
 
     DECLARE @Lines TABLE
     (
@@ -512,7 +518,7 @@ IF COL_LENGTH('SalesReturns', 'DeliveryFeeRefunded') IS NULL
 GO
 
 IF COL_LENGTH('SalesReturns', 'CreatedBy') IS NULL
-    ALTER TABLE SalesReturns ADD CreatedBy INT NULL;
+    ALTER TABLE SalesReturns ADD CreatedBy varchar(150) NULL;
 GO
 
 IF COL_LENGTH('SalesReturns', 'Notes') IS NULL
@@ -554,13 +560,16 @@ CREATE OR ALTER PROCEDURE dbo.usp_CreateSalesReturn
     @ReturnShippingFee DECIMAL(18,2) = 0,
     @MarketplaceFee DECIMAL(18,2) = 0,
     @DeliveryFeeRefunded BIT = 0,
-    @CreatedBy INT = NULL,
+    @CreatedBy varchar(150) = NULL,
     @Notes NVARCHAR(500) = NULL,
     @LinesJson NVARCHAR(MAX)
 AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
+
+    IF @CreatedBy IS NOT NULL AND NOT EXISTS (SELECT 1 FROM Users WHERE UserId = @CreatedBy AND IsActive = 1)
+        THROW 50124, 'Active creating user not found.', 1;
 
     DECLARE @Lines TABLE
     (

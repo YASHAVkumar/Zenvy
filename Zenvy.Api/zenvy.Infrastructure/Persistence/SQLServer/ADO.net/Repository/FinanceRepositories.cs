@@ -14,6 +14,17 @@ internal static class FinanceSql
 
     public static void AddNullable(this SqlParameterCollection parameters, string name, object? value) =>
         parameters.AddWithValue(name, value ?? DBNull.Value);
+
+    public static void AddGuid(this SqlParameterCollection parameters, string name, string? value, bool nullable = false)
+    {
+        var parameter = parameters.Add(name, SqlDbType.UniqueIdentifier);
+        if (string.IsNullOrWhiteSpace(value) && nullable)
+            parameter.Value = DBNull.Value;
+        else if (Guid.TryParse(value, out var id))
+            parameter.Value = id;
+        else
+            throw new ArgumentException($"{name.TrimStart('@')} must be a valid GUID.", name);
+    }
 }
 
 public class ExpenseRepository(IConfiguration configuration) : IExpenseRepository
@@ -55,7 +66,7 @@ public class ExpenseRepository(IConfiguration configuration) : IExpenseRepositor
         command.Parameters.AddWithValue("@Amount", request.Amount);
         command.Parameters.AddNullable("@Description", request.Description);
         command.Parameters.AddWithValue("@ExpenseDate", request.ExpenseDate);
-        command.Parameters.AddWithValue("@CreatedBy", request.CreatedBy);
+        command.Parameters.AddGuid("@CreatedBy", request.CreatedBy);
         return Convert.ToInt64(await command.ExecuteScalarAsync());
     }
 
@@ -77,7 +88,7 @@ public class ExpenseRepository(IConfiguration configuration) : IExpenseRepositor
             Amount = reader.GetDecimal(reader.GetOrdinal("Amount")),
             Description = reader.IsDBNull(reader.GetOrdinal("Description")) ? null : reader.GetString(reader.GetOrdinal("Description")),
             ExpenseDate = reader.GetDateTime(reader.GetOrdinal("ExpenseDate")),
-            CreatedBy = reader.GetInt32(reader.GetOrdinal("CreatedBy")),
+            CreatedBy = reader.GetGuid(reader.GetOrdinal("CreatedBy")).ToString(),
             CreatedByName = reader.GetString(reader.GetOrdinal("CreatedByName"))
         });
         return result;
@@ -119,23 +130,23 @@ public class EmployeeCommissionRepository(IConfiguration configuration) : IEmplo
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
         await using var command = FinanceSql.Command("usp_CreateEmployeeCommission", connection);
-        command.Parameters.AddWithValue("@UserId", request.UserId);
+        command.Parameters.AddGuid("@UserId", request.UserId);
         command.Parameters.AddWithValue("@OrderId", request.OrderId);
         command.Parameters.AddWithValue("@CommissionPercent", request.CommissionPercent);
         return Convert.ToInt64(await command.ExecuteScalarAsync());
     }
 
-    public async Task<IEnumerable<EmployeeCommissionResponse>> GetAllAsync(int? userId, DateTime? fromDate, DateTime? toDate)
+    public async Task<IEnumerable<EmployeeCommissionResponse>> GetAllAsync(string? userId, DateTime? fromDate, DateTime? toDate)
     {
         var result = new List<EmployeeCommissionResponse>();
         await using var connection = new SqlConnection(connectionString);
         await connection.OpenAsync();
         await using var command = FinanceSql.Command("usp_GetEmployeeCommissions", connection);
-        command.Parameters.AddNullable("@UserId", userId); command.Parameters.AddNullable("@FromDate", fromDate); command.Parameters.AddNullable("@ToDate", toDate);
+        command.Parameters.AddGuid("@UserId", userId, nullable: true); command.Parameters.AddNullable("@FromDate", fromDate); command.Parameters.AddNullable("@ToDate", toDate);
         await using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync()) result.Add(new EmployeeCommissionResponse
         {
-            CommissionId = reader.GetInt64(reader.GetOrdinal("CommissionId")), UserId = reader.GetInt32(reader.GetOrdinal("UserId")),
+            CommissionId = reader.GetInt64(reader.GetOrdinal("CommissionId")), UserId = reader.GetGuid(reader.GetOrdinal("UserId")).ToString(),
             EmployeeName = reader.GetString(reader.GetOrdinal("EmployeeName")), OrderId = reader.GetInt64(reader.GetOrdinal("OrderId")),
             OrderAmount = reader.GetDecimal(reader.GetOrdinal("OrderAmount")), CommissionPercent = reader.GetDecimal(reader.GetOrdinal("CommissionPercent")),
             CommissionAmount = reader.GetDecimal(reader.GetOrdinal("CommissionAmount")), CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAt"))

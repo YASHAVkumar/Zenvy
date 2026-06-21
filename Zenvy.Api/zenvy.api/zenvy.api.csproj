@@ -13,5 +13,6 @@
   <ItemGroup>
     <ProjectReference Include="..\zenvy.application\zenvy.application.csproj" />
     <ProjectReference Include="..\zenvy.infrastructure\zenvy.infrastructure.csproj" />
+    <ProjectReference Include="..\zenvy.shared\zenvy.shared.csproj" />
   </ItemGroup>
 </Project>

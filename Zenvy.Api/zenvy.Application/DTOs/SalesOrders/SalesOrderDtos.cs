@@ -4,7 +4,7 @@ public class SalesOrderRequest
 {
     public int? CustomerId { get; set; }
     public int ChannelId { get; set; }
-    public int CreatedBy { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
     public string? ExternalOrderId { get; set; }
     public DateTime OrderDate { get; set; } = DateTime.UtcNow;
     public string Status { get; set; } = "CONFIRMED";
@@ -28,7 +28,7 @@ public class SalesOrderResponse
     public string? CustomerName { get; set; }
     public int ChannelId { get; set; }
     public string ChannelName { get; set; } = string.Empty;
-    public int CreatedBy { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
     public string? ExternalOrderId { get; set; }
     public DateTime OrderDate { get; set; }
     public string Status { get; set; } = string.Empty;

@@ -12,7 +12,7 @@ public class ReturnRequest
     public decimal ReturnShippingFee { get; set; }
     public decimal MarketplaceFee { get; set; }
     public bool DeliveryFeeRefunded { get; set; }
-    public int? CreatedBy { get; set; }
+    public string? CreatedBy { get; set; }
     public string? Notes { get; set; }
     public List<ReturnLineRequest> Lines { get; set; } = [];
 }
@@ -52,7 +52,7 @@ public class ReturnResponse
     public decimal ReturnShippingFee { get; set; }
     public decimal MarketplaceFee { get; set; }
     public bool DeliveryFeeRefunded { get; set; }
-    public int? CreatedBy { get; set; }
+    public string? CreatedBy { get; set; }
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<ReturnLineResponse> Lines { get; set; } = [];

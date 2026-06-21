@@ -171,7 +171,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_AdjustInventory
     @Quantity INT,
     @ReferenceType NVARCHAR(50) = NULL,
     @ReferenceId BIGINT = NULL,
-    @CreatedBy INT = NULL
+    @CreatedBy varchar(150) = NULL
 AS
 BEGIN
     BEGIN TRANSACTION;
@@ -215,7 +215,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_DamageInventory
     @Quantity INT,
     @ReferenceType NVARCHAR(50) = NULL,
     @ReferenceId BIGINT = NULL,
-    @CreatedBy INT = NULL
+    @CreatedBy varchar(150) = NULL
 AS
 BEGIN
     IF @Quantity <= 0
@@ -253,7 +253,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_TransferInventory
     @Quantity INT,
     @ReferenceType NVARCHAR(50) = NULL,
     @ReferenceId BIGINT = NULL,
-    @CreatedBy INT = NULL
+    @CreatedBy varchar(150) = NULL
 AS
 BEGIN
     IF @Quantity <= 0

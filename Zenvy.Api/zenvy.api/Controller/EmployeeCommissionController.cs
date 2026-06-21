@@ -16,7 +16,7 @@ public class EmployeeCommissionController(IEmployeeCommissionService service) : 
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int? userId, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
+    public async Task<IActionResult> GetAll([FromQuery] string? userId, [FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
     {
         if (fromDate > toDate) return BadRequest("fromDate cannot be after toDate.");
         return Ok(await service.GetAllAsync(userId, fromDate, toDate));

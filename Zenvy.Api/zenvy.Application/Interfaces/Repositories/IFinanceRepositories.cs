@@ -19,7 +19,7 @@ public interface IProfitRepository
 public interface IEmployeeCommissionRepository
 {
     Task<long> CreateAsync(EmployeeCommissionRequest request);
-    Task<IEnumerable<EmployeeCommissionResponse>> GetAllAsync(int? userId, DateTime? fromDate, DateTime? toDate);
+    Task<IEnumerable<EmployeeCommissionResponse>> GetAllAsync(string? userId, DateTime? fromDate, DateTime? toDate);
 }
 
 public interface IInvestorRepository

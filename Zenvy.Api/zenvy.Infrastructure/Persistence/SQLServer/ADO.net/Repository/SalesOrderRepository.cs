@@ -19,7 +19,7 @@ public class SalesOrderRepository(IConfiguration configuration) : ISalesOrderRep
         using var command = CreateStoredProcedureCommand("usp_CreateSalesOrder", connection);
         command.Parameters.AddWithValue("@CustomerId", (object?)request.CustomerId ?? DBNull.Value);
         command.Parameters.AddWithValue("@ChannelId", request.ChannelId);
-        command.Parameters.AddWithValue("@CreatedBy", request.CreatedBy);
+        command.Parameters.AddWithValue("@CreatedBy", Guid.Parse(request.CreatedBy));
         command.Parameters.AddWithValue("@ExternalOrderId", (object?)request.ExternalOrderId ?? DBNull.Value);
         command.Parameters.AddWithValue("@OrderDate", request.OrderDate);
         command.Parameters.AddWithValue("@Status", request.Status);
@@ -97,7 +97,7 @@ public class SalesOrderRepository(IConfiguration configuration) : ISalesOrderRep
             CustomerName = reader.IsDBNull(reader.GetOrdinal("CustomerName")) ? null : reader.GetString(reader.GetOrdinal("CustomerName")),
             ChannelId = reader.GetInt32(reader.GetOrdinal("ChannelId")),
             ChannelName = reader.GetString(reader.GetOrdinal("ChannelName")),
-            CreatedBy = reader.GetInt32(reader.GetOrdinal("CreatedBy")),
+            CreatedBy = reader.GetGuid(reader.GetOrdinal("CreatedBy")).ToString(),
             ExternalOrderId = reader.IsDBNull(reader.GetOrdinal("ExternalOrderId")) ? null : reader.GetString(reader.GetOrdinal("ExternalOrderId")),
             OrderDate = reader.GetDateTime(reader.GetOrdinal("OrderDate")),
             Status = reader.GetString(reader.GetOrdinal("Status")),

@@ -34,7 +34,7 @@ public class ProductsRepository(IConfiguration configuration) : IProductsReposit
                 command.Parameters.AddWithValue("@Description", (object?)request.ProductMaster.Description ?? DBNull.Value);
                 command.Parameters.AddWithValue("@HSNCode", (object?)request.ProductMaster.HSNCode ?? DBNull.Value);
                 command.Parameters.AddWithValue("@GSTPercentage", request.ProductMaster.GSTPercentage);
-                command.Parameters.AddWithValue("@CreatedBy", "1"); // Changed to string since SP expects VARCHAR(50)
+                command.Parameters.AddWithValue("@CreatedBy", DBNull.Value);
 
                 // Pass the incoming standard scalar cost/selling pricing for the main Product entity
                 //command.Parameters.AddWithValue("@CostPrice", request.Product.CostPrice);
@@ -459,7 +459,7 @@ ORDER BY ProductName;", connection);
         command.Parameters.AddWithValue("@Description", (object?)request.ProductMaster.Description ?? DBNull.Value);
         command.Parameters.AddWithValue("@HSNCode", (object?)request.ProductMaster.HSNCode ?? DBNull.Value);
         command.Parameters.AddWithValue("@GSTPercentage", request.ProductMaster.GSTPercentage);
-        command.Parameters.AddWithValue("@CreatedBy", "1");
+        command.Parameters.AddWithValue("@CreatedBy", DBNull.Value);
         var variants = command.Parameters.AddWithValue("@Variants", CreateVariantTable(request.ProductVariants));
         variants.SqlDbType = SqlDbType.Structured;
         variants.TypeName = "dbo.ProductVariantType";

@@ -23,7 +23,7 @@ public class PurchaseOrderRepository(IConfiguration configuration) : IPurchaseOr
         command.Parameters.AddWithValue("@OrderDate", request.OrderDate);
         command.Parameters.AddWithValue("@ExpectedDate", (object?)request.ExpectedDate ?? DBNull.Value);
         command.Parameters.AddWithValue("@Status", request.Status);
-        command.Parameters.AddWithValue("@CreatedBy", request.CreatedBy);
+        command.Parameters.AddWithValue("@CreatedBy", Guid.Parse(request.CreatedBy));
         command.Parameters.AddWithValue("@LinesJson", JsonSerializer.Serialize(request.Lines));
 
         return Convert.ToInt64(await command.ExecuteScalarAsync());
@@ -103,7 +103,7 @@ public class PurchaseOrderRepository(IConfiguration configuration) : IPurchaseOr
             SubTotal = reader.GetDecimal(reader.GetOrdinal("SubTotal")),
             TaxAmount = reader.GetDecimal(reader.GetOrdinal("TaxAmount")),
             GrandTotal = reader.GetDecimal(reader.GetOrdinal("GrandTotal")),
-            CreatedBy = reader.GetInt32(reader.GetOrdinal("CreatedBy")),
+            CreatedBy = reader.GetGuid(reader.GetOrdinal("CreatedBy")).ToString(),
             CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAt"))
         };
     }

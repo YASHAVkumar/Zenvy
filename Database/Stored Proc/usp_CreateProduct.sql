@@ -7,7 +7,7 @@ CREATE OR ALTER PROCEDURE usp_CreateProduct
     @Description NVARCHAR(MAX) = NULL,
     @HSNCode NVARCHAR(20) = NULL,
     @GSTPercentage DECIMAL(5,2),
-    @CreatedBy VARCHAR(50),
+    @CreatedBy varchar(150) = NULL,
     @Variants ProductVariantType READONLY,
     @Images ProductImageType READONLY
 )

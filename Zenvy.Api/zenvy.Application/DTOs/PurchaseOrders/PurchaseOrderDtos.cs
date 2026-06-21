@@ -8,7 +8,7 @@ public class PurchaseOrderRequest
     public DateTime OrderDate { get; set; } = DateTime.UtcNow;
     public DateTime? ExpectedDate { get; set; }
     public string Status { get; set; } = "RECEIVED";
-    public int CreatedBy { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
     public List<PurchaseOrderLineRequest> Lines { get; set; } = [];
 }
 
@@ -34,7 +34,7 @@ public class PurchaseOrderResponse
     public decimal SubTotal { get; set; }
     public decimal TaxAmount { get; set; }
     public decimal GrandTotal { get; set; }
-    public int CreatedBy { get; set; }
+    public string CreatedBy { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public List<PurchaseOrderLineResponse> Lines { get; set; } = [];
 }

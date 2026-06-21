@@ -29,7 +29,7 @@ public class InventoryAdjustmentRequest
     public int Quantity { get; set; }
     public string? ReferenceType { get; set; }
     public long? ReferenceId { get; set; }
-    public int? CreatedBy { get; set; }
+    public string? CreatedBy { get; set; }
 }
 
 public class InventoryDamageRequest
@@ -39,7 +39,7 @@ public class InventoryDamageRequest
     public int Quantity { get; set; }
     public string? ReferenceType { get; set; }
     public long? ReferenceId { get; set; }
-    public int? CreatedBy { get; set; }
+    public string? CreatedBy { get; set; }
 }
 
 public class InventoryTransferRequest
@@ -50,7 +50,7 @@ public class InventoryTransferRequest
     public int Quantity { get; set; }
     public string? ReferenceType { get; set; }
     public long? ReferenceId { get; set; }
-    public int? CreatedBy { get; set; }
+    public string? CreatedBy { get; set; }
 }
 
 public class InventoryTransactionResponse
@@ -66,6 +66,6 @@ public class InventoryTransactionResponse
     public int Quantity { get; set; }
     public string? ReferenceType { get; set; }
     public long? ReferenceId { get; set; }
-    public int? CreatedBy { get; set; }
+    public string? CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
 }
