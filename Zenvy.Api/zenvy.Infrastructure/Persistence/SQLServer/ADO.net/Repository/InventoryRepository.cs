@@ -166,6 +166,8 @@ public class InventoryRepository(IConfiguration configuration) : IInventoryRepos
         return new InventoryResponse
         {
             InventoryId = reader.GetInt32(reader.GetOrdinal("InventoryId")),
+            ProductMasterId = reader.GetInt32(reader.GetOrdinal("ProductMasterId")),
+            ProductName = reader.GetString(reader.GetOrdinal("ProductName")),
             VariantId = reader.GetInt32(reader.GetOrdinal("VariantId")),
             SKU = reader.GetString(reader.GetOrdinal("SKU")),
             WarehouseId = reader.GetInt32(reader.GetOrdinal("WarehouseId")),
@@ -181,6 +183,8 @@ public class InventoryRepository(IConfiguration configuration) : IInventoryRepos
         return new InventoryTransactionResponse
         {
             TransactionId = reader.GetInt64(reader.GetOrdinal("TransactionId")),
+            ProductMasterId = reader.GetInt32(reader.GetOrdinal("ProductMasterId")),
+            ProductName = reader.GetString(reader.GetOrdinal("ProductName")),
             VariantId = reader.GetInt32(reader.GetOrdinal("VariantId")),
             SKU = reader.GetString(reader.GetOrdinal("SKU")),
             WarehouseId = reader.GetInt32(reader.GetOrdinal("WarehouseId")),

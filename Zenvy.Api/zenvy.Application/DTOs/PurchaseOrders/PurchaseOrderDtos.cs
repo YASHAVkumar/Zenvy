@@ -43,6 +43,8 @@ public class PurchaseOrderLineResponse
 {
     public long POLineId { get; set; }
     public long POId { get; set; }
+    public int ProductMasterId { get; set; }
+    public string ProductName { get; set; } = string.Empty;
     public int VariantId { get; set; }
     public string SKU { get; set; } = string.Empty;
     public int Qty { get; set; }

@@ -68,6 +68,8 @@ public class PurchaseOrderRepository(IConfiguration configuration) : IPurchaseOr
             {
                 POLineId = reader.GetInt64(reader.GetOrdinal("POLineId")),
                 POId = reader.GetInt64(reader.GetOrdinal("POId")),
+                ProductMasterId = reader.GetInt32(reader.GetOrdinal("ProductMasterId")),
+                ProductName = reader.GetString(reader.GetOrdinal("ProductName")),
                 VariantId = reader.GetInt32(reader.GetOrdinal("VariantId")),
                 SKU = reader.GetString(reader.GetOrdinal("SKU")),
                 Qty = reader.GetInt32(reader.GetOrdinal("Qty")),

@@ -108,6 +108,8 @@ AS
 BEGIN
     SELECT
         i.InventoryId,
+        pm.ProductMasterId,
+        pm.ProductName,
         i.VariantId,
         pv.SKU,
         i.WarehouseId,
@@ -117,6 +119,7 @@ BEGIN
         i.AvailableQty
     FROM Inventory i
     INNER JOIN ProductVariants pv ON pv.VariantId = i.VariantId
+    INNER JOIN ProductMasters pm ON pm.ProductMasterId = pv.ProductMasterId
     INNER JOIN Warehouses w ON w.WarehouseId = i.WarehouseId
     ORDER BY i.InventoryId DESC;
 END;
@@ -128,6 +131,8 @@ AS
 BEGIN
     SELECT
         i.InventoryId,
+        pm.ProductMasterId,
+        pm.ProductName,
         i.VariantId,
         pv.SKU,
         i.WarehouseId,
@@ -137,6 +142,7 @@ BEGIN
         i.AvailableQty
     FROM Inventory i
     INNER JOIN ProductVariants pv ON pv.VariantId = i.VariantId
+    INNER JOIN ProductMasters pm ON pm.ProductMasterId = pv.ProductMasterId
     INNER JOIN Warehouses w ON w.WarehouseId = i.WarehouseId
     WHERE i.InventoryId = @InventoryId;
 END;
@@ -313,6 +319,8 @@ AS
 BEGIN
     SELECT
         it.TransactionId,
+        pm.ProductMasterId,
+        pm.ProductName,
         it.VariantId,
         pv.SKU,
         it.WarehouseId,
@@ -325,6 +333,7 @@ BEGIN
         it.CreatedAt
     FROM InventoryTransactions it
     INNER JOIN ProductVariants pv ON pv.VariantId = it.VariantId
+    INNER JOIN ProductMasters pm ON pm.ProductMasterId = pv.ProductMasterId
     INNER JOIN Warehouses w ON w.WarehouseId = it.WarehouseId
     WHERE @VariantId IS NULL
        OR it.VariantId = @VariantId

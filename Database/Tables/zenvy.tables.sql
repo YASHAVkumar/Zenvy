@@ -110,43 +110,45 @@ CREATE TABLE Suppliers
 GO
 
 /* =====================================================
-   PRODUCT
+   PRODUCT MASTER
 ===================================================== */
-CREATE TABLE Products
+CREATE TABLE ProductMasters
 (
-    ProductId INT IDENTITY(1,1) PRIMARY KEY,
+    ProductMasterId INT IDENTITY(1,1) PRIMARY KEY,
+    ProductCode NVARCHAR(50) NOT NULL UNIQUE,
+    ProductName NVARCHAR(250) NOT NULL,
     CategoryId INT NOT NULL,
     BrandId INT NULL,
-
-    ProductName NVARCHAR(200) NOT NULL,
     Description NVARCHAR(MAX),
+    HSNCode NVARCHAR(20),
+    GSTPercentage DECIMAL(5,2) NOT NULL DEFAULT 0,
+    IsActive BIT NOT NULL DEFAULT 1,
+    CreatedBy VARCHAR(50) NULL,
+    CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
 
-    Status BIT NOT NULL DEFAULT 1,
-    CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
-
-    CONSTRAINT FK_Product_Category
+    CONSTRAINT FK_ProductMaster_Category
         FOREIGN KEY(CategoryId)
         REFERENCES Categories(CategoryId),
 
-    CONSTRAINT FK_Product_Brand
+    CONSTRAINT FK_ProductMaster_Brand
         FOREIGN KEY(BrandId)
         REFERENCES Brands(BrandId)
 );
 GO
 
 /* =====================================================
-   PRODUCT IMAGE
+   PRODUCT
 ===================================================== */
-CREATE TABLE ProductImages
+CREATE TABLE Products
 (
-    ImageId INT IDENTITY(1,1) PRIMARY KEY,
-    ProductId INT NOT NULL,
-    ImageUrl NVARCHAR(500) NOT NULL,
-    IsPrimaryImage BIT NOT NULL DEFAULT 0,
+    ProductId INT IDENTITY(1,1) PRIMARY KEY,
+    ProductMasterId INT NOT NULL,
+    IsActive BIT NOT NULL DEFAULT 1,
+    CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
 
-    CONSTRAINT FK_ProductImages_Product
-        FOREIGN KEY(ProductId)
-        REFERENCES Products(ProductId)
+    CONSTRAINT FK_Product_ProductMaster
+        FOREIGN KEY(ProductMasterId)
+        REFERENCES ProductMasters(ProductMasterId)
 );
 GO
 
@@ -156,6 +158,7 @@ GO
 CREATE TABLE ProductVariants
 (
     VariantId INT IDENTITY(1,1) PRIMARY KEY,
+    ProductMasterId INT NOT NULL,
     ProductId INT NOT NULL,
 
     SKU NVARCHAR(100) NOT NULL UNIQUE,
@@ -167,11 +170,59 @@ CREATE TABLE ProductVariants
     Gender NVARCHAR(20),
     Season NVARCHAR(20),
 
+    CurrentPrice DECIMAL(18,2) NOT NULL DEFAULT 0,
     Status BIT NOT NULL DEFAULT 1,
+
+    CONSTRAINT FK_Variant_ProductMaster
+        FOREIGN KEY(ProductMasterId)
+        REFERENCES ProductMasters(ProductMasterId),
 
     CONSTRAINT FK_Variant_Product
         FOREIGN KEY(ProductId)
         REFERENCES Products(ProductId)
+);
+GO
+
+/* =====================================================
+   PRODUCT IMAGE
+===================================================== */
+CREATE TABLE ProductImages
+(
+    ImageId INT IDENTITY(1,1) PRIMARY KEY,
+    ProductMasterId INT NOT NULL,
+    ProductId INT NOT NULL,
+    ImageUrl NVARCHAR(500) NOT NULL,
+    IsPrimary BIT NOT NULL DEFAULT 0,
+    CreatedDate DATETIME2 NOT NULL DEFAULT GETDATE(),
+
+    CONSTRAINT FK_ProductImages_ProductMaster
+        FOREIGN KEY(ProductMasterId)
+        REFERENCES ProductMasters(ProductMasterId),
+
+    CONSTRAINT FK_ProductImages_Product
+        FOREIGN KEY(ProductId)
+        REFERENCES Products(ProductId)
+);
+GO
+
+CREATE TYPE dbo.ProductVariantType AS TABLE
+(
+    SKU NVARCHAR(100),
+    Barcode NVARCHAR(100),
+    Size NVARCHAR(50),
+    Color NVARCHAR(50),
+    Material NVARCHAR(50),
+    Gender NVARCHAR(20),
+    Season NVARCHAR(20),
+    CurrentPrice DECIMAL(18,2),
+    Status BIT
+);
+GO
+
+CREATE TYPE dbo.ProductImageType AS TABLE
+(
+    ImageUrl NVARCHAR(500),
+    IsPrimary BIT
 );
 GO
 
@@ -587,7 +638,16 @@ CREATE TABLE SalesReturns
 
     Reason NVARCHAR(500),
 
-    Status NVARCHAR(50),
+    Status NVARCHAR(50) NOT NULL DEFAULT 'REQUESTED',
+    RefundStatus NVARCHAR(50) NOT NULL DEFAULT 'PENDING',
+    RefundMethod NVARCHAR(50),
+    RefundAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+    ReturnShippingFee DECIMAL(18,2) NOT NULL DEFAULT 0,
+    MarketplaceFee DECIMAL(18,2) NOT NULL DEFAULT 0,
+    DeliveryFeeRefunded BIT NOT NULL DEFAULT 0,
+    CreatedBy INT NULL,
+    Notes NVARCHAR(500),
+    CreatedAt DATETIME2 NOT NULL DEFAULT GETDATE(),
 
     CONSTRAINT FK_Return_Order
         FOREIGN KEY(OrderId)
@@ -604,18 +664,31 @@ CREATE TABLE SalesReturnLines
     ReturnLineId BIGINT IDENTITY(1,1) PRIMARY KEY,
 
     ReturnId BIGINT NOT NULL,
+    OrderLineId BIGINT NOT NULL,
 
     VariantId INT NOT NULL,
 
     Qty INT NOT NULL,
+    RefundAmount DECIMAL(18,2) NOT NULL DEFAULT 0,
+    [Condition] NVARCHAR(50),
+    Restock BIT NOT NULL DEFAULT 1,
+    RestockWarehouseId INT NULL,
 
     CONSTRAINT FK_ReturnLine_Return
         FOREIGN KEY(ReturnId)
         REFERENCES SalesReturns(ReturnId),
 
+    CONSTRAINT FK_ReturnLine_OrderLine
+        FOREIGN KEY(OrderLineId)
+        REFERENCES SalesOrderLines(OrderLineId),
+
     CONSTRAINT FK_ReturnLine_Variant
         FOREIGN KEY(VariantId)
-        REFERENCES ProductVariants(VariantId)
+        REFERENCES ProductVariants(VariantId),
+
+    CONSTRAINT FK_ReturnLine_Warehouse
+        FOREIGN KEY(RestockWarehouseId)
+        REFERENCES Warehouses(WarehouseId)
 );
 GO
 

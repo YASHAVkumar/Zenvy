@@ -9,8 +9,11 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO Suppliers (Name, ContactPerson, Phone, Email, Address, Status)
-    VALUES (@Name, @ContactPerson, @Phone, @Email, @Address, @Status);
+    INSERT INTO SupplierAddress(AddressLine1,CreatedAt) VALUES(@Address,GETDATE())  
+    DECLARE @SupAdsId INT=CAST(SCOPE_IDENTITY() AS INT)  
+  
+    INSERT INTO Suppliers (Name,AddressId,ContactPerson, Phone, Email, Status,CreatedAt)  
+    VALUES (@Name,@SupAdsId,@ContactPerson, @Phone, @Email, @Status,GETDATE());
 
     SELECT CAST(SCOPE_IDENTITY() AS INT) AS SupplierId;
 END;
@@ -21,9 +24,9 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    SELECT SupplierId, Name, ContactPerson, Phone, Email, Address, Status, CreatedAt
-    FROM Suppliers
-    ORDER BY SupplierId DESC;
+     SELECT s.SupplierId, s.Name, s.ContactPerson, s.Phone, s.Email, addr.AddressLine1, s.Status, s.CreatedAt  
+    FROM Suppliers s inner join SupplierAddress addr on s.AddressId=addr.AddressId  
+    ORDER BY s.SupplierId DESC; 
 END;
 GO
 
@@ -205,6 +208,8 @@ BEGIN
     SELECT
         pol.POLineId,
         pol.POId,
+        pm.ProductMasterId,
+        pm.ProductName,
         pol.VariantId,
         pv.SKU,
         pol.Qty,
@@ -213,6 +218,7 @@ BEGIN
         CAST(pol.LineTotal AS DECIMAL(18,2)) AS LineTotal
     FROM PurchaseOrderLines pol
     INNER JOIN ProductVariants pv ON pv.VariantId = pol.VariantId
+    INNER JOIN ProductMasters pm ON pm.ProductMasterId = pv.ProductMasterId
     WHERE pol.POId = @POId
     ORDER BY pol.POLineId;
 END;
@@ -397,6 +403,8 @@ BEGIN
     SELECT
         sol.OrderLineId,
         sol.OrderId,
+        pm.ProductMasterId,
+        pm.ProductName,
         sol.VariantId,
         pv.SKU,
         sol.Qty,
@@ -406,6 +414,7 @@ BEGIN
         CAST(sol.LineTotal AS DECIMAL(18,2)) AS LineTotal
     FROM SalesOrderLines sol
     INNER JOIN ProductVariants pv ON pv.VariantId = sol.VariantId
+    INNER JOIN ProductMasters pm ON pm.ProductMasterId = pv.ProductMasterId
     WHERE sol.OrderId = @OrderId
     ORDER BY sol.OrderLineId;
 END;
@@ -475,5 +484,333 @@ BEGIN
     SELECT ShipmentId, OrderId, CourierName, TrackingNumber, ShippedDate, DeliveredDate, Status
     FROM Shipments
     ORDER BY ShipmentId DESC;
+END;
+GO
+
+IF COL_LENGTH('SalesReturns', 'RefundStatus') IS NULL
+    ALTER TABLE SalesReturns ADD RefundStatus NVARCHAR(50) NOT NULL CONSTRAINT DF_SalesReturns_RefundStatus DEFAULT 'PENDING';
+GO
+
+IF COL_LENGTH('SalesReturns', 'RefundMethod') IS NULL
+    ALTER TABLE SalesReturns ADD RefundMethod NVARCHAR(50) NULL;
+GO
+
+IF COL_LENGTH('SalesReturns', 'RefundAmount') IS NULL
+    ALTER TABLE SalesReturns ADD RefundAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_SalesReturns_RefundAmount DEFAULT 0;
+GO
+
+IF COL_LENGTH('SalesReturns', 'ReturnShippingFee') IS NULL
+    ALTER TABLE SalesReturns ADD ReturnShippingFee DECIMAL(18,2) NOT NULL CONSTRAINT DF_SalesReturns_ReturnShippingFee DEFAULT 0;
+GO
+
+IF COL_LENGTH('SalesReturns', 'MarketplaceFee') IS NULL
+    ALTER TABLE SalesReturns ADD MarketplaceFee DECIMAL(18,2) NOT NULL CONSTRAINT DF_SalesReturns_MarketplaceFee DEFAULT 0;
+GO
+
+IF COL_LENGTH('SalesReturns', 'DeliveryFeeRefunded') IS NULL
+    ALTER TABLE SalesReturns ADD DeliveryFeeRefunded BIT NOT NULL CONSTRAINT DF_SalesReturns_DeliveryFeeRefunded DEFAULT 0;
+GO
+
+IF COL_LENGTH('SalesReturns', 'CreatedBy') IS NULL
+    ALTER TABLE SalesReturns ADD CreatedBy INT NULL;
+GO
+
+IF COL_LENGTH('SalesReturns', 'Notes') IS NULL
+    ALTER TABLE SalesReturns ADD Notes NVARCHAR(500) NULL;
+GO
+
+IF COL_LENGTH('SalesReturns', 'CreatedAt') IS NULL
+    ALTER TABLE SalesReturns ADD CreatedAt DATETIME2 NOT NULL CONSTRAINT DF_SalesReturns_CreatedAt DEFAULT GETDATE();
+GO
+
+IF COL_LENGTH('SalesReturnLines', 'OrderLineId') IS NULL
+    ALTER TABLE SalesReturnLines ADD OrderLineId BIGINT NULL;
+GO
+
+IF COL_LENGTH('SalesReturnLines', 'RefundAmount') IS NULL
+    ALTER TABLE SalesReturnLines ADD RefundAmount DECIMAL(18,2) NOT NULL CONSTRAINT DF_SalesReturnLines_RefundAmount DEFAULT 0;
+GO
+
+IF COL_LENGTH('SalesReturnLines', 'Condition') IS NULL
+    ALTER TABLE SalesReturnLines ADD [Condition] NVARCHAR(50) NULL;
+GO
+
+IF COL_LENGTH('SalesReturnLines', 'Restock') IS NULL
+    ALTER TABLE SalesReturnLines ADD Restock BIT NOT NULL CONSTRAINT DF_SalesReturnLines_Restock DEFAULT 1;
+GO
+
+IF COL_LENGTH('SalesReturnLines', 'RestockWarehouseId') IS NULL
+    ALTER TABLE SalesReturnLines ADD RestockWarehouseId INT NULL;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_CreateSalesReturn
+    @OrderId BIGINT,
+    @ReturnDate DATETIME2,
+    @Reason NVARCHAR(500) = NULL,
+    @Status NVARCHAR(50) = 'REQUESTED',
+    @RefundStatus NVARCHAR(50) = 'PENDING',
+    @RefundMethod NVARCHAR(50) = NULL,
+    @RefundAmount DECIMAL(18,2) = 0,
+    @ReturnShippingFee DECIMAL(18,2) = 0,
+    @MarketplaceFee DECIMAL(18,2) = 0,
+    @DeliveryFeeRefunded BIT = 0,
+    @CreatedBy INT = NULL,
+    @Notes NVARCHAR(500) = NULL,
+    @LinesJson NVARCHAR(MAX)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    DECLARE @Lines TABLE
+    (
+        OrderLineId BIGINT NOT NULL,
+        VariantId INT NULL,
+        Qty INT NOT NULL,
+        RefundAmount DECIMAL(18,2) NOT NULL,
+        [Condition] NVARCHAR(50) NULL,
+        Restock BIT NOT NULL,
+        RestockWarehouseId INT NULL
+    );
+
+    INSERT INTO @Lines (OrderLineId, Qty, RefundAmount, [Condition], Restock, RestockWarehouseId)
+    SELECT OrderLineId, Qty, ISNULL(RefundAmount, 0), [Condition], ISNULL(Restock, 1), RestockWarehouseId
+    FROM OPENJSON(@LinesJson)
+    WITH
+    (
+        OrderLineId BIGINT '$.OrderLineId',
+        Qty INT '$.Qty',
+        RefundAmount DECIMAL(18,2) '$.RefundAmount',
+        [Condition] NVARCHAR(50) '$.Condition',
+        Restock BIT '$.Restock',
+        RestockWarehouseId INT '$.RestockWarehouseId'
+    );
+
+    IF NOT EXISTS (SELECT 1 FROM @Lines)
+        THROW 50130, 'Return must contain at least one line.', 1;
+
+    IF EXISTS (SELECT 1 FROM @Lines WHERE OrderLineId <= 0 OR Qty <= 0 OR RefundAmount < 0)
+        THROW 50131, 'Return line values are invalid.', 1;
+
+    UPDATE lines
+    SET VariantId = sol.VariantId
+    FROM @Lines lines
+    INNER JOIN SalesOrderLines sol ON sol.OrderLineId = lines.OrderLineId
+    WHERE sol.OrderId = @OrderId;
+
+    IF EXISTS (SELECT 1 FROM @Lines WHERE VariantId IS NULL)
+        THROW 50132, 'One or more return lines do not belong to the order.', 1;
+
+    IF EXISTS
+    (
+        SELECT 1
+        FROM @Lines lines
+        INNER JOIN SalesOrderLines sol ON sol.OrderLineId = lines.OrderLineId
+        OUTER APPLY
+        (
+            SELECT SUM(srl.Qty) AS ReturnedQty
+            FROM SalesReturnLines srl
+            INNER JOIN SalesReturns sr ON sr.ReturnId = srl.ReturnId
+            WHERE srl.OrderLineId = lines.OrderLineId
+              AND UPPER(ISNULL(sr.Status, '')) NOT IN ('REJECTED', 'CANCELLED')
+        ) returned
+        WHERE lines.Qty + ISNULL(returned.ReturnedQty, 0) > sol.Qty
+    )
+        THROW 50133, 'Return quantity cannot exceed sold quantity.', 1;
+
+    DECLARE @ResolvedLines TABLE
+    (
+        OrderLineId BIGINT NOT NULL,
+        VariantId INT NOT NULL,
+        Qty INT NOT NULL,
+        RefundAmount DECIMAL(18,2) NOT NULL,
+        [Condition] NVARCHAR(50) NULL,
+        Restock BIT NOT NULL,
+        RestockWarehouseId INT NULL
+    );
+
+    INSERT INTO @ResolvedLines (OrderLineId, VariantId, Qty, RefundAmount, [Condition], Restock, RestockWarehouseId)
+    SELECT
+        lines.OrderLineId,
+        lines.VariantId,
+        lines.Qty,
+        lines.RefundAmount,
+        lines.[Condition],
+        lines.Restock,
+        COALESCE(lines.RestockWarehouseId, saleStock.WarehouseId)
+    FROM @Lines lines
+    OUTER APPLY
+    (
+        SELECT TOP 1 it.WarehouseId
+        FROM InventoryTransactions it
+        WHERE it.ReferenceType = 'SALES_ORDER'
+          AND it.ReferenceId = @OrderId
+          AND it.VariantId = lines.VariantId
+        ORDER BY it.TransactionId
+    ) saleStock;
+
+    IF EXISTS (SELECT 1 FROM @ResolvedLines WHERE Restock = 1 AND RestockWarehouseId IS NULL)
+        THROW 50134, 'Restock warehouse is required for restocked return lines.', 1;
+
+    DECLARE @CalculatedRefund DECIMAL(18,2);
+    DECLARE @ReturnId BIGINT;
+
+    SELECT @CalculatedRefund =
+        SUM(RefundAmount)
+        + CASE WHEN @DeliveryFeeRefunded = 1 THEN (SELECT ShippingFee FROM SalesOrders WHERE OrderId = @OrderId) ELSE 0 END
+        - @ReturnShippingFee
+        - @MarketplaceFee
+    FROM @ResolvedLines;
+
+    IF @RefundAmount = 0
+        SET @RefundAmount = @CalculatedRefund;
+
+    BEGIN TRANSACTION;
+
+    INSERT INTO SalesReturns
+        (OrderId, ReturnDate, Reason, Status, RefundStatus, RefundMethod, RefundAmount, ReturnShippingFee, MarketplaceFee, DeliveryFeeRefunded, CreatedBy, Notes)
+    VALUES
+        (@OrderId, @ReturnDate, @Reason, @Status, @RefundStatus, @RefundMethod, @RefundAmount, @ReturnShippingFee, @MarketplaceFee, @DeliveryFeeRefunded, @CreatedBy, @Notes);
+
+    SET @ReturnId = SCOPE_IDENTITY();
+
+    INSERT INTO SalesReturnLines
+        (ReturnId, OrderLineId, VariantId, Qty, RefundAmount, [Condition], Restock, RestockWarehouseId)
+    SELECT @ReturnId, OrderLineId, VariantId, Qty, RefundAmount, [Condition], Restock, RestockWarehouseId
+    FROM @ResolvedLines;
+
+    MERGE Inventory AS target
+    USING
+    (
+        SELECT VariantId, RestockWarehouseId AS WarehouseId, SUM(Qty) AS Qty
+        FROM @ResolvedLines
+        WHERE Restock = 1
+        GROUP BY VariantId, RestockWarehouseId
+    ) AS source
+        ON target.VariantId = source.VariantId
+       AND target.WarehouseId = source.WarehouseId
+    WHEN MATCHED THEN
+        UPDATE SET OnHandQty = target.OnHandQty + source.Qty
+    WHEN NOT MATCHED THEN
+        INSERT (VariantId, WarehouseId, OnHandQty, ReservedQty)
+        VALUES (source.VariantId, source.WarehouseId, source.Qty, 0);
+
+    INSERT INTO InventoryTransactions
+        (VariantId, WarehouseId, TransactionType, Quantity, ReferenceType, ReferenceId, CreatedBy)
+    SELECT VariantId, RestockWarehouseId, 'RETURN', SUM(Qty), 'SALES_RETURN', @ReturnId, @CreatedBy
+    FROM @ResolvedLines
+    WHERE Restock = 1
+    GROUP BY VariantId, RestockWarehouseId;
+
+    COMMIT TRANSACTION;
+
+    SELECT @ReturnId AS ReturnId;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_GetSalesReturns
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        sr.ReturnId,
+        sr.OrderId,
+        so.ChannelId,
+        sc.ChannelName,
+        so.ExternalOrderId,
+        so.CustomerId,
+        c.Name AS CustomerName,
+        sr.ReturnDate,
+        sr.Reason,
+        ISNULL(sr.Status, '') AS Status,
+        sr.RefundStatus,
+        sr.RefundMethod,
+        sr.RefundAmount,
+        sr.ReturnShippingFee,
+        sr.MarketplaceFee,
+        sr.DeliveryFeeRefunded,
+        sr.CreatedBy,
+        sr.Notes,
+        sr.CreatedAt
+    FROM SalesReturns sr
+    INNER JOIN SalesOrders so ON so.OrderId = sr.OrderId
+    INNER JOIN SalesChannels sc ON sc.ChannelId = so.ChannelId
+    LEFT JOIN Customers c ON c.CustomerId = so.CustomerId
+    ORDER BY sr.ReturnId DESC;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_GetSalesReturnById
+    @ReturnId BIGINT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        sr.ReturnId,
+        sr.OrderId,
+        so.ChannelId,
+        sc.ChannelName,
+        so.ExternalOrderId,
+        so.CustomerId,
+        c.Name AS CustomerName,
+        sr.ReturnDate,
+        sr.Reason,
+        ISNULL(sr.Status, '') AS Status,
+        sr.RefundStatus,
+        sr.RefundMethod,
+        sr.RefundAmount,
+        sr.ReturnShippingFee,
+        sr.MarketplaceFee,
+        sr.DeliveryFeeRefunded,
+        sr.CreatedBy,
+        sr.Notes,
+        sr.CreatedAt
+    FROM SalesReturns sr
+    INNER JOIN SalesOrders so ON so.OrderId = sr.OrderId
+    INNER JOIN SalesChannels sc ON sc.ChannelId = so.ChannelId
+    LEFT JOIN Customers c ON c.CustomerId = so.CustomerId
+    WHERE sr.ReturnId = @ReturnId;
+
+    SELECT
+        srl.ReturnLineId,
+        srl.ReturnId,
+        srl.OrderLineId,
+        pm.ProductMasterId,
+        srl.VariantId,
+        pv.SKU,
+        pm.ProductName,
+        srl.Qty,
+        srl.RefundAmount,
+        srl.[Condition],
+        srl.Restock,
+        srl.RestockWarehouseId,
+        w.WarehouseName AS RestockWarehouseName
+    FROM SalesReturnLines srl
+    INNER JOIN ProductVariants pv ON pv.VariantId = srl.VariantId
+    INNER JOIN ProductMasters pm ON pm.ProductMasterId = pv.ProductMasterId
+    LEFT JOIN Warehouses w ON w.WarehouseId = srl.RestockWarehouseId
+    WHERE srl.ReturnId = @ReturnId
+    ORDER BY srl.ReturnLineId;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_UpdateSalesReturnStatus
+    @ReturnId BIGINT,
+    @Status NVARCHAR(50),
+    @RefundStatus NVARCHAR(50) = NULL,
+    @Notes NVARCHAR(500) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE SalesReturns
+    SET Status = @Status,
+        RefundStatus = COALESCE(@RefundStatus, RefundStatus),
+        Notes = COALESCE(@Notes, Notes)
+    WHERE ReturnId = @ReturnId;
+
+    SELECT @@ROWCOUNT AS RowsAffected;
 END;
 GO

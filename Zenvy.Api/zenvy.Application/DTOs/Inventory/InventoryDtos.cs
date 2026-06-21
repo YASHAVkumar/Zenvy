@@ -11,6 +11,8 @@ public class InventoryRequest
 public class InventoryResponse
 {
     public int InventoryId { get; set; }
+    public int ProductMasterId { get; set; }
+    public string ProductName { get; set; } = string.Empty;
     public int VariantId { get; set; }
     public string SKU { get; set; } = string.Empty;
     public int WarehouseId { get; set; }
@@ -54,6 +56,8 @@ public class InventoryTransferRequest
 public class InventoryTransactionResponse
 {
     public long TransactionId { get; set; }
+    public int ProductMasterId { get; set; }
+    public string ProductName { get; set; } = string.Empty;
     public int VariantId { get; set; }
     public string SKU { get; set; } = string.Empty;
     public int WarehouseId { get; set; }

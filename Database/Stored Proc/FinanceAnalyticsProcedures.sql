@@ -85,11 +85,13 @@ BEGIN
     WHERE so.OrderDate >= @FromDate AND so.OrderDate < @EndDate AND UPPER(so.Status) <> 'CANCELLED';
 
     SELECT srl.VariantId, srl.Qty AS Quantity,
-           CAST((srl.Qty * sol.UnitPrice) - (sol.Discount * srl.Qty / NULLIF(sol.Qty, 0)) +
-                (sol.Tax * srl.Qty / NULLIF(sol.Qty, 0)) AS DECIMAL(18,2)) AS RefundAmount
+           CAST(CASE
+                WHEN COL_LENGTH('SalesReturnLines', 'RefundAmount') IS NOT NULL THEN srl.RefundAmount
+                ELSE (srl.Qty * sol.UnitPrice) - (sol.Discount * srl.Qty / NULLIF(sol.Qty, 0)) + (sol.Tax * srl.Qty / NULLIF(sol.Qty, 0))
+           END AS DECIMAL(18,2)) AS RefundAmount
     FROM SalesReturns sr
     INNER JOIN SalesReturnLines srl ON srl.ReturnId = sr.ReturnId
-    INNER JOIN SalesOrderLines sol ON sol.OrderId = sr.OrderId AND sol.VariantId = srl.VariantId
+    INNER JOIN SalesOrderLines sol ON sol.OrderLineId = srl.OrderLineId
     WHERE sr.ReturnDate >= @FromDate AND sr.ReturnDate < @EndDate AND UPPER(ISNULL(sr.Status, '')) <> 'REJECTED';
 
     SELECT Amount FROM Expenses WHERE ExpenseDate >= @FromDate AND ExpenseDate < @EndDate;

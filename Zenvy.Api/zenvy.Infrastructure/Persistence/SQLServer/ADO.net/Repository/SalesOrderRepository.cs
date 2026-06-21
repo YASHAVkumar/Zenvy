@@ -68,6 +68,8 @@ public class SalesOrderRepository(IConfiguration configuration) : ISalesOrderRep
             {
                 OrderLineId = reader.GetInt64(reader.GetOrdinal("OrderLineId")),
                 OrderId = reader.GetInt64(reader.GetOrdinal("OrderId")),
+                ProductMasterId = reader.GetInt32(reader.GetOrdinal("ProductMasterId")),
+                ProductName = reader.GetString(reader.GetOrdinal("ProductName")),
                 VariantId = reader.GetInt32(reader.GetOrdinal("VariantId")),
                 SKU = reader.GetString(reader.GetOrdinal("SKU")),
                 Qty = reader.GetInt32(reader.GetOrdinal("Qty")),

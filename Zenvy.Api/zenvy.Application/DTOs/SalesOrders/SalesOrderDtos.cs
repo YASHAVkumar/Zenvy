@@ -45,6 +45,8 @@ public class SalesOrderLineResponse
 {
     public long OrderLineId { get; set; }
     public long OrderId { get; set; }
+    public int ProductMasterId { get; set; }
+    public string ProductName { get; set; } = string.Empty;
     public int VariantId { get; set; }
     public string SKU { get; set; } = string.Empty;
     public int Qty { get; set; }
