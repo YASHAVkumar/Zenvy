@@ -3,6 +3,18 @@
   "WorkspaceRootPath": "D:\\Project Local\\Zenvy\\Zenvy.Api\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{E2054DE1-3912-86C9-CD74-688C845B2014}|zenvy.infrastructure\\zenvy.infrastructure.csproj|d:\\project local\\zenvy\\zenvy.api\\zenvy.infrastructure\\persistence\\sqlserver\\ado.net\\repository\\dashboardrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E2054DE1-3912-86C9-CD74-688C845B2014}|zenvy.infrastructure\\zenvy.infrastructure.csproj|solutionrelative:zenvy.infrastructure\\persistence\\sqlserver\\ado.net\\repository\\dashboardrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9CEDA8F4-4F72-01EB-89B0-9E3ED815DE68}|zenvy.api\\zenvy.api.csproj|d:\\project local\\zenvy\\zenvy.api\\zenvy.api\\controller\\dashboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9CEDA8F4-4F72-01EB-89B0-9E3ED815DE68}|zenvy.api\\zenvy.api.csproj|solutionrelative:zenvy.api\\controller\\dashboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{30BB2D08-AD81-6497-EE88-EA6D8FF8D1CB}|zenvy.application\\zenvy.application.csproj|d:\\project local\\zenvy\\zenvy.api\\zenvy.application\\interfaces\\repositories\\idashboardrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{30BB2D08-AD81-6497-EE88-EA6D8FF8D1CB}|zenvy.application\\zenvy.application.csproj|solutionrelative:zenvy.application\\interfaces\\repositories\\idashboardrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{E2054DE1-3912-86C9-CD74-688C845B2014}|zenvy.infrastructure\\zenvy.infrastructure.csproj|d:\\project local\\zenvy\\zenvy.api\\zenvy.infrastructure\\dependencyinjection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E2054DE1-3912-86C9-CD74-688C845B2014}|zenvy.infrastructure\\zenvy.infrastructure.csproj|solutionrelative:zenvy.infrastructure\\dependencyinjection.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -26,7 +38,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 11,
+          "SelectedChildIndex": 10,
           "Children": [
             {
               "$type": "Bookmark",
@@ -63,6 +75,45 @@
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "DashboardController.cs",
+              "DocumentMoniker": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.api\\Controller\\DashboardController.cs",
+              "RelativeDocumentMoniker": "zenvy.api\\Controller\\DashboardController.cs",
+              "ToolTip": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.api\\Controller\\DashboardController.cs",
+              "RelativeToolTip": "zenvy.api\\Controller\\DashboardController.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAQwCcAAABAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-24T14:55:49.74Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "IDashboardRepository.cs",
+              "DocumentMoniker": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.Application\\Interfaces\\Repositories\\IDashboardRepository.cs",
+              "RelativeDocumentMoniker": "zenvy.Application\\Interfaces\\Repositories\\IDashboardRepository.cs",
+              "ToolTip": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.Application\\Interfaces\\Repositories\\IDashboardRepository.cs",
+              "RelativeToolTip": "zenvy.Application\\Interfaces\\Repositories\\IDashboardRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAnAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-24T14:55:31.189Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "DashboardRepository.cs",
+              "DocumentMoniker": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.Infrastructure\\Persistence\\SQLServer\\ADO.net\\Repository\\DashboardRepository.cs",
+              "RelativeDocumentMoniker": "zenvy.Infrastructure\\Persistence\\SQLServer\\ADO.net\\Repository\\DashboardRepository.cs",
+              "ToolTip": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.Infrastructure\\Persistence\\SQLServer\\ADO.net\\Repository\\DashboardRepository.cs",
+              "RelativeToolTip": "zenvy.Infrastructure\\Persistence\\SQLServer\\ADO.net\\Repository\\DashboardRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-24T14:46:07.488Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "launchSettings.json",
               "DocumentMoniker": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.api\\Properties\\launchSettings.json",
               "RelativeDocumentMoniker": "zenvy.api\\Properties\\launchSettings.json",
@@ -70,12 +121,11 @@
               "RelativeToolTip": "zenvy.api\\Properties\\launchSettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAuAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-06-20T12:32:24.179Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-20T12:32:24.179Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 6,
               "Title": "appsettings.Development.json",
               "DocumentMoniker": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.api\\appsettings.Development.json",
               "RelativeDocumentMoniker": "zenvy.api\\appsettings.Development.json",
@@ -87,7 +137,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "JwtService.cs",
               "DocumentMoniker": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.Infrastructure\\Services\\JwtService.cs",
               "RelativeDocumentMoniker": "zenvy.Infrastructure\\Services\\JwtService.cs",
@@ -99,13 +149,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 3,
               "Title": "DependencyInjection.cs",
               "DocumentMoniker": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.Infrastructure\\DependencyInjection.cs",
               "RelativeDocumentMoniker": "zenvy.Infrastructure\\DependencyInjection.cs",
               "ToolTip": "D:\\Project Local\\Zenvy\\Zenvy.Api\\zenvy.Infrastructure\\DependencyInjection.cs",
               "RelativeToolTip": "zenvy.Infrastructure\\DependencyInjection.cs",
-              "ViewState": "AgIAABUAAAAAAAAAAAAowAsAAAAjAAAAAAAAAA==",
+              "ViewState": "AgIAABUAAAAAAAAAAAAowB8AAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-06-10T12:33:56.221Z",
               "EditorCaption": ""

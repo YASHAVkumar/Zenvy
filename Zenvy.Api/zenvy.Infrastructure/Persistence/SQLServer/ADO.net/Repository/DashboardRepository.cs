@@ -87,7 +87,7 @@ public class DashboardRepository(IConfiguration configuration) : IDashboardRepos
             PendingOrders = reader.GetInt32(reader.GetOrdinal("PendingOrders")),
             PendingDispatch = reader.GetInt32(reader.GetOrdinal("PendingDispatch")),
             Returns = reader.GetInt32(reader.GetOrdinal("Returns")),
-            DamagedStock = reader.GetDecimal(reader.GetOrdinal("DamagedStock"))
+            DamagedStock = reader.GetInt32(reader.GetOrdinal("DamagedStock"))
         };
 
         return new OperationsDashboardResponse

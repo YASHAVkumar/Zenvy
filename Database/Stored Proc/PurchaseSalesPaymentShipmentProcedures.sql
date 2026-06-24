@@ -784,7 +784,6 @@ GO
 IF COL_LENGTH('SalesReturnLines', 'RestockWarehouseId') IS NULL
     ALTER TABLE SalesReturnLines ADD RestockWarehouseId INT NULL;
 GO
-
 CREATE OR ALTER PROCEDURE dbo.usp_CreateSalesReturn
     @OrderId BIGINT,
     @ReturnDate DATETIME2,
@@ -796,7 +795,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_CreateSalesReturn
     @ReturnShippingFee DECIMAL(18,2) = 0,
     @MarketplaceFee DECIMAL(18,2) = 0,
     @DeliveryFeeRefunded BIT = 0,
-    @CreatedBy varchar(150) = NULL,
+    @CreatedBy VARCHAR(150) = NULL,
     @Notes NVARCHAR(500) = NULL,
     @LinesJson NVARCHAR(MAX)
 AS
@@ -804,7 +803,14 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    IF @CreatedBy IS NOT NULL AND NOT EXISTS (SELECT 1 FROM Users WHERE UserId = @CreatedBy AND IsActive = 1)
+    IF @CreatedBy IS NOT NULL
+       AND NOT EXISTS
+       (
+            SELECT 1
+            FROM Users
+            WHERE UserId = @CreatedBy
+              AND IsActive = 1
+       )
         THROW 50124, 'Active creating user not found.', 1;
 
     DECLARE @Lines TABLE
@@ -813,13 +819,27 @@ BEGIN
         VariantId INT NULL,
         Qty INT NOT NULL,
         RefundAmount DECIMAL(18,2) NOT NULL,
-        [Condition] NVARCHAR(50) NULL,
+        [Condition] NVARCHAR(50),
         Restock BIT NOT NULL,
         RestockWarehouseId INT NULL
     );
 
-    INSERT INTO @Lines (OrderLineId, Qty, RefundAmount, [Condition], Restock, RestockWarehouseId)
-    SELECT OrderLineId, Qty, ISNULL(RefundAmount, 0), [Condition], ISNULL(Restock, 1), RestockWarehouseId
+    INSERT INTO @Lines
+    (
+        OrderLineId,
+        Qty,
+        RefundAmount,
+        [Condition],
+        Restock,
+        RestockWarehouseId
+    )
+    SELECT
+        OrderLineId,
+        Qty,
+        ISNULL(RefundAmount,0),
+        [Condition],
+        ISNULL(Restock,1),
+        RestockWarehouseId
     FROM OPENJSON(@LinesJson)
     WITH
     (
@@ -834,91 +854,173 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM @Lines)
         THROW 50130, 'Return must contain at least one line.', 1;
 
-    IF EXISTS (SELECT 1 FROM @Lines WHERE OrderLineId <= 0 OR Qty <= 0 OR RefundAmount < 0)
-        THROW 50131, 'Return line values are invalid.', 1;
-
-    UPDATE lines
+    UPDATE l
     SET VariantId = sol.VariantId
-    FROM @Lines lines
-    INNER JOIN SalesOrderLines sol ON sol.OrderLineId = lines.OrderLineId
+    FROM @Lines l
+    INNER JOIN SalesOrderLines sol
+        ON sol.OrderLineId = l.OrderLineId
     WHERE sol.OrderId = @OrderId;
-
-    IF EXISTS (SELECT 1 FROM @Lines WHERE VariantId IS NULL)
-        THROW 50132, 'One or more return lines do not belong to the order.', 1;
-
-    IF EXISTS
-    (
-        SELECT 1
-        FROM @Lines lines
-        INNER JOIN SalesOrderLines sol ON sol.OrderLineId = lines.OrderLineId
-        OUTER APPLY
-        (
-            SELECT SUM(srl.Qty) AS ReturnedQty
-            FROM SalesReturnLines srl
-            INNER JOIN SalesReturns sr ON sr.ReturnId = srl.ReturnId
-            WHERE srl.OrderLineId = lines.OrderLineId
-              AND UPPER(ISNULL(sr.Status, '')) NOT IN ('REJECTED', 'CANCELLED')
-        ) returned
-        WHERE lines.Qty + ISNULL(returned.ReturnedQty, 0) > sol.Qty
-    )
-        THROW 50133, 'Return quantity cannot exceed sold quantity.', 1;
 
     DECLARE @ResolvedLines TABLE
     (
-        OrderLineId BIGINT NOT NULL,
-        VariantId INT NOT NULL,
-        Qty INT NOT NULL,
-        RefundAmount DECIMAL(18,2) NOT NULL,
-        [Condition] NVARCHAR(50) NULL,
-        Restock BIT NOT NULL,
-        RestockWarehouseId INT NULL
+        OrderLineId BIGINT,
+        VariantId INT,
+        Qty INT,
+        RefundAmount DECIMAL(18,2),
+        [Condition] NVARCHAR(50),
+        Restock BIT,
+        RestockWarehouseId INT
     );
 
-    INSERT INTO @ResolvedLines (OrderLineId, VariantId, Qty, RefundAmount, [Condition], Restock, RestockWarehouseId)
+    INSERT INTO @ResolvedLines
+    (
+        OrderLineId,
+        VariantId,
+        Qty,
+        RefundAmount,
+        [Condition],
+        Restock,
+        RestockWarehouseId
+    )
     SELECT
-        lines.OrderLineId,
-        lines.VariantId,
-        lines.Qty,
-        lines.RefundAmount,
-        lines.[Condition],
-        lines.Restock,
-        COALESCE(lines.RestockWarehouseId, saleStock.WarehouseId)
-    FROM @Lines lines
+        l.OrderLineId,
+        l.VariantId,
+        l.Qty,
+        l.RefundAmount,
+        l.[Condition],
+        l.Restock,
+        COALESCE(l.RestockWarehouseId, stock.WarehouseId)
+    FROM @Lines l
     OUTER APPLY
     (
-        SELECT TOP 1 it.WarehouseId
-        FROM InventoryTransactions it
-        WHERE it.ReferenceType = 'SALES_ORDER'
-          AND it.ReferenceId = @OrderId
-          AND it.VariantId = lines.VariantId
-        ORDER BY it.TransactionId
-    ) saleStock;
+        SELECT TOP 1 WarehouseId
+        FROM InventoryTransactions
+        WHERE ReferenceType = 'SALES_ORDER'
+          AND ReferenceId = @OrderId
+          AND VariantId = l.VariantId
+        ORDER BY TransactionId
+    ) stock;
 
-    IF EXISTS (SELECT 1 FROM @ResolvedLines WHERE Restock = 1 AND RestockWarehouseId IS NULL)
-        THROW 50134, 'Restock warehouse is required for restocked return lines.', 1;
-
-    DECLARE @CalculatedRefund DECIMAL(18,2);
     DECLARE @ReturnId BIGINT;
-
-    SELECT @CalculatedRefund =
-        SUM(RefundAmount)
-        + CASE WHEN @DeliveryFeeRefunded = 1 THEN (SELECT ShippingFee FROM SalesOrders WHERE OrderId = @OrderId) ELSE 0 END
-        - @ReturnShippingFee
-        - @MarketplaceFee
-    FROM @ResolvedLines;
-
-    IF @RefundAmount = 0
-        SET @RefundAmount = @CalculatedRefund;
 
     BEGIN TRANSACTION;
 
     INSERT INTO SalesReturns
-        (OrderId, ReturnDate, Reason, Status, RefundStatus, RefundMethod, RefundAmount, ReturnShippingFee, MarketplaceFee, DeliveryFeeRefunded, CreatedBy, Notes)
+    (
+        OrderId,
+        ReturnDate,
+        Reason,
+        Status,
+        RefundStatus,
+        RefundMethod,
+        RefundAmount,
+        ReturnShippingFee,
+        MarketplaceFee,
+        DeliveryFeeRefunded,
+        CreatedBy,
+        Notes
+    )
     VALUES
-        (@OrderId, @ReturnDate, @Reason, @Status, @RefundStatus, @RefundMethod, @RefundAmount, @ReturnShippingFee, @MarketplaceFee, @DeliveryFeeRefunded, @CreatedBy, @Notes);
+    (
+        @OrderId,
+        @ReturnDate,
+        @Reason,
+        @Status,
+        @RefundStatus,
+        @RefundMethod,
+        @RefundAmount,
+        @ReturnShippingFee,
+        @MarketplaceFee,
+        @DeliveryFeeRefunded,
+        @CreatedBy,
+        @Notes
+    );
 
     SET @ReturnId = SCOPE_IDENTITY();
 
+    INSERT INTO SalesReturnLines
+    (
+        ReturnId,
+        OrderLineId,
+        VariantId,
+        Qty,
+        RefundAmount,
+        [Condition],
+        Restock,
+        RestockWarehouseId
+    )
+    SELECT
+        @ReturnId,
+        OrderLineId,
+        VariantId,
+        Qty,
+        RefundAmount,
+        [Condition],
+        Restock,
+        RestockWarehouseId
+    FROM @ResolvedLines;
+
+    MERGE Inventory AS target
+    USING
+    (
+        SELECT
+            VariantId,
+            RestockWarehouseId AS WarehouseId,
+            SUM(Qty) Qty
+        FROM @ResolvedLines
+        WHERE Restock = 1
+        GROUP BY VariantId, RestockWarehouseId
+    ) source
+    ON target.VariantId = source.VariantId
+    AND target.WarehouseId = source.WarehouseId
+
+    WHEN MATCHED THEN
+        UPDATE
+        SET OnHandQty = target.OnHandQty + source.Qty
+
+    WHEN NOT MATCHED THEN
+        INSERT
+        (
+            VariantId,
+            WarehouseId,
+            OnHandQty,
+            ReservedQty
+        )
+        VALUES
+        (
+            source.VariantId,
+            source.WarehouseId,
+            source.Qty,
+            0
+        );
+
+    INSERT INTO InventoryTransactions
+    (
+        VariantId,
+        WarehouseId,
+        TransactionType,
+        Quantity,
+        ReferenceType,
+        ReferenceId,
+        CreatedBy
+    )
+    SELECT
+        VariantId,
+        RestockWarehouseId,
+        'RETURN',
+        SUM(Qty),
+        'SALES_RETURN',
+        @ReturnId,
+        @CreatedBy
+    FROM @ResolvedLines
+    WHERE Restock = 1
+    GROUP BY VariantId, RestockWarehouseId;
+
+    COMMIT TRANSACTION;
+
+    SELECT @ReturnId AS ReturnId;
+END;
+GO
 -- =============================================
 -- DASHBOARD ANALYTICS STORED PROCEDURES
 -- =============================================
@@ -929,26 +1031,59 @@ BEGIN
     SET NOCOUNT ON;
 
     DECLARE @TodayStart DATETIME2 = CAST(GETDATE() AS DATE);
-    DECLARE @TodayEnd DATETIME2 = CAST(GETDATE() AS DATE) + CAST('23:59:59.9999999' AS TIME(7));
+    DECLARE @TodayEnd   DATETIME2 = DATEADD(DAY, 1, CAST(GETDATE() AS DATE));
     DECLARE @MonthStart DATETIME2 = DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1);
-    DECLARE @MonthEnd DATETIME2 = EOMONTH(GETDATE());
+    DECLARE @MonthEnd   DATETIME2 = DATEADD(DAY, 1, EOMONTH(GETDATE()));
 
-    SELECT 
-        ISNULL(SUM(CASE WHEN so.OrderDate BETWEEN @TodayStart AND @TodayEnd THEN so.GrandTotal ELSE 0 END), 0) AS TodaysSales,
-        ISNULL(SUM(CASE WHEN so.OrderDate BETWEEN @MonthStart AND @MonthEnd THEN so.GrandTotal ELSE 0 END), 0) AS MonthlySales,
-        ISNULL(SUM(CASE WHEN so.OrderDate BETWEEN @MonthStart AND @MonthEnd THEN (so.GrandTotal - ISNULL((SELECT SUM(Qty * UnitPrice) FROM SalesOrderLines WHERE OrderId = so.OrderId), 0)) ELSE 0 END), 0) AS MonthlyProfit,
-        ISNULL(SUM(il.Qty * pm.CostPrice), 0) AS InventoryValue,
+    ;WITH OrderCost AS
+    (
+        SELECT
+            OrderId,
+            SUM(Qty * UnitPrice) AS TotalCost
+        FROM SalesOrderLines
+        GROUP BY OrderId
+    )
+    SELECT
+        ISNULL(SUM(CASE
+            WHEN so.OrderDate >= @TodayStart
+             AND so.OrderDate < @TodayEnd
+            THEN so.GrandTotal
+            ELSE 0
+        END),0) AS TodaysSales,
+
+        ISNULL(SUM(CASE
+            WHEN so.OrderDate >= @MonthStart
+             AND so.OrderDate < @MonthEnd
+            THEN so.GrandTotal
+            ELSE 0
+        END),0) AS MonthlySales,
+
+        ISNULL(SUM(CASE
+            WHEN so.OrderDate >= @MonthStart
+             AND so.OrderDate < @MonthEnd
+            THEN so.GrandTotal - ISNULL(oc.TotalCost,0)
+            ELSE 0
+        END),0) AS MonthlyProfit,
+
+        0 AS InventoryValue,
         0 AS AvailableCash,
         0 AS ReserveFund,
-        ISNULL(SUM(inv.InvestmentAmount), 0) AS InvestorLiability,
-        (SELECT COUNT(*) FROM SalesOrders WHERE Status IN ('PENDING', 'PROCESSING')) AS PendingOrders,
-        (SELECT COUNT(*) FROM SalesReturns WHERE Status = 'REQUESTED') AS PendingReturns
+
+        ISNULL((SELECT SUM(InvestmentAmount)
+                FROM Investors
+                WHERE Status = 1),0) AS InvestorLiability,
+
+        (SELECT COUNT(*)
+         FROM SalesOrders
+         WHERE Status IN ('PENDING','PROCESSING')) AS PendingOrders,
+
+        (SELECT COUNT(*)
+         FROM SalesReturns
+         WHERE Status = 'REQUESTED') AS PendingReturns
+
     FROM SalesOrders so
-    INNER JOIN SalesOrderLines sol ON so.OrderId = sol.OrderId
-    LEFT JOIN InventoryLedger il ON il.VariantId = sol.VariantId
-    LEFT JOIN ProductVariants pv ON pv.VariantId = il.VariantId
-    LEFT JOIN ProductMaster pm ON pm.ProductId = pv.ProductId
-    LEFT JOIN Investors inv ON inv.IsActive = 1;
+    LEFT JOIN OrderCost oc
+        ON so.OrderId = oc.OrderId;
 END;
 GO
 
@@ -957,18 +1092,18 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    SELECT 
-        0 AS CashAvailable,
-        0 AS BankBalance,
-        0 AS WorkingCapital,
-        0 AS ReserveFund,
-        ISNULL(SUM(i.InvestmentAmount), 0) AS InvestorCapital,
-        0 AS OutstandingLoans,
-        ISNULL(SUM(so.GrandTotal), 0) AS Receivables,
-        ISNULL(SUM(po.PurchaseOrderTotal), 0) AS Payables
+SELECT
+    CAST(0 AS DECIMAL(18,2)) AS CashAvailable,
+    CAST(0 AS DECIMAL(18,2)) AS BankBalance,
+    CAST(0 AS DECIMAL(18,2)) AS WorkingCapital,
+    CAST(0 AS DECIMAL(18,2)) AS ReserveFund,
+    CAST(ISNULL(SUM(i.InvestmentAmount), 0) AS DECIMAL(18,2)) AS InvestorCapital,
+    CAST(0 AS DECIMAL(18,2)) AS OutstandingLoans,
+    CAST(ISNULL(SUM(so.GrandTotal), 0) AS DECIMAL(18,2)) AS Receivables,
+    CAST(ISNULL(SUM(po.SubTotal), 0) AS DECIMAL(18,2)) AS Payables
     FROM Investors i
     FULL OUTER JOIN SalesOrders so ON so.OrderId IS NOT NULL
-    FULL OUTER JOIN PurchaseOrders po ON po.PurchaseOrderId IS NOT NULL;
+    FULL OUTER JOIN PurchaseOrders po ON po.POId IS NOT NULL;
 END;
 GO
 
@@ -1055,52 +1190,55 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    SELECT 
+    SELECT
         sc.ChannelName,
+
         ISNULL(SUM(so.GrandTotal), 0) AS ChannelRevenue,
-        ISNULL(SUM(so.GrandTotal - ISNULL((SELECT SUM(Qty * UnitPrice) FROM SalesOrderLines WHERE OrderId = so.OrderId), 0)), 0) AS ChannelProfit,
-        CASE WHEN SUM(so.GrandTotal) > 0 THEN (SUM(ms.MarketplaceCommission) / SUM(so.GrandTotal)) * 100 ELSE 0 END AS CommissionPercent,
-        CASE WHEN COUNT(DISTINCT so.OrderId) > 0 THEN (COUNT(sr.ReturnId) * 100.0 / COUNT(DISTINCT so.OrderId)) ELSE 0 END AS ReturnPercent,
+
+        ISNULL(
+            SUM(so.GrandTotal) -
+            SUM(ISNULL(sol.OrderCost, 0)),
+            0
+        ) AS ChannelProfit,
+
+        CASE
+            WHEN SUM(so.GrandTotal) > 0
+            THEN (SUM(ISNULL(ms.MarketplaceCommission, 0)) * 100.0)
+                 / SUM(so.GrandTotal)
+            ELSE 0
+        END AS CommissionPercent,
+
+        CASE
+            WHEN COUNT(DISTINCT so.OrderId) > 0
+            THEN (COUNT(DISTINCT sr.ReturnId) * 100.0)
+                 / COUNT(DISTINCT so.OrderId)
+            ELSE 0
+        END AS ReturnPercent,
+
         0 AS PenaltyPercent
+
     FROM SalesChannels sc
-    LEFT JOIN SalesOrders so ON sc.ChannelId = so.ChannelId
-    LEFT JOIN MarketplaceSettlements ms ON so.OrderId = ms.OrderId
-    LEFT JOIN SalesReturns sr ON so.OrderId = sr.OrderId
-    GROUP BY sc.ChannelName;
-END;
-GO
 
-    INSERT INTO SalesReturnLines
-        (ReturnId, OrderLineId, VariantId, Qty, RefundAmount, [Condition], Restock, RestockWarehouseId)
-    SELECT @ReturnId, OrderLineId, VariantId, Qty, RefundAmount, [Condition], Restock, RestockWarehouseId
-    FROM @ResolvedLines;
+    LEFT JOIN SalesOrders so
+        ON sc.ChannelId = so.ChannelId
 
-    MERGE Inventory AS target
-    USING
+    LEFT JOIN
     (
-        SELECT VariantId, RestockWarehouseId AS WarehouseId, SUM(Qty) AS Qty
-        FROM @ResolvedLines
-        WHERE Restock = 1
-        GROUP BY VariantId, RestockWarehouseId
-    ) AS source
-        ON target.VariantId = source.VariantId
-       AND target.WarehouseId = source.WarehouseId
-    WHEN MATCHED THEN
-        UPDATE SET OnHandQty = target.OnHandQty + source.Qty
-    WHEN NOT MATCHED THEN
-        INSERT (VariantId, WarehouseId, OnHandQty, ReservedQty)
-        VALUES (source.VariantId, source.WarehouseId, source.Qty, 0);
+        SELECT
+            OrderId,
+            SUM(Qty * UnitPrice) AS OrderCost
+        FROM SalesOrderLines
+        GROUP BY OrderId
+    ) sol
+        ON so.OrderId = sol.OrderId
 
-    INSERT INTO InventoryTransactions
-        (VariantId, WarehouseId, TransactionType, Quantity, ReferenceType, ReferenceId, CreatedBy)
-    SELECT VariantId, RestockWarehouseId, 'RETURN', SUM(Qty), 'SALES_RETURN', @ReturnId, @CreatedBy
-    FROM @ResolvedLines
-    WHERE Restock = 1
-    GROUP BY VariantId, RestockWarehouseId;
+    LEFT JOIN MarketplaceSettlements ms
+        ON so.OrderId = ms.OrderId
 
-    COMMIT TRANSACTION;
+    LEFT JOIN SalesReturns sr
+        ON so.OrderId = sr.OrderId
 
-    SELECT @ReturnId AS ReturnId;
+    GROUP BY sc.ChannelName;
 END;
 GO
 
