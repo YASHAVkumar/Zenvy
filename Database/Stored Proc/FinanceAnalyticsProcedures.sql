@@ -24,9 +24,9 @@ BEGIN
     SELECT ExpenseTypeId, Name, Description FROM ExpenseTypes ORDER BY Name;
 END;
 GO
-
 CREATE OR ALTER PROCEDURE dbo.usp_CreateExpense
     @ExpenseTypeId INT,
+    @PoId Int,
     @Amount DECIMAL(18,2),
     @Description NVARCHAR(500) = NULL,
     @ExpenseDate DATETIME2,
@@ -37,8 +37,10 @@ BEGIN
     IF @Amount <= 0 THROW 50202, 'Expense amount must be greater than zero.', 1;
     IF NOT EXISTS (SELECT 1 FROM Users WHERE UserId = @CreatedBy AND IsActive = 1)
         THROW 50204, 'Active creating user not found.', 1;
-    INSERT INTO Expenses (ExpenseTypeId, Amount, Description, ExpenseDate, CreatedBy)
-    VALUES (@ExpenseTypeId, @Amount, @Description, @ExpenseDate, @CreatedBy);
+    IF NOT EXISTS (SELECT 1 FROM PurchaseOrders WHERE POId = @PoId)
+        THROW 50204, 'Purchase order not found.', 1;
+    INSERT INTO Expenses (ExpenseTypeId,POId, Amount, Description, ExpenseDate, CreatedBy)
+    VALUES (@ExpenseTypeId,@PoId, @Amount, @Description, @ExpenseDate, @CreatedBy);
     SELECT CAST(SCOPE_IDENTITY() AS BIGINT) AS ExpenseId;
 END;
 GO
@@ -140,18 +142,21 @@ GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_CreateInvestor
     @Name NVARCHAR(150), @Email NVARCHAR(100) = NULL, @Phone NVARCHAR(20) = NULL,
-    @InvestmentAmount DECIMAL(18,2), @OwnershipPercent DECIMAL(5,2), @JoinDate DATETIME2
+    @InvestmentAmount DECIMAL(18,2), @OwnershipPercent DECIMAL(5,2),@LossPercent DECIMAL(5,2)=null, @JoinDate DATETIME2
 AS
 BEGIN
     SET NOCOUNT ON; SET XACT_ABORT ON;
     IF @InvestmentAmount < 0 THROW 50220, 'Investment amount cannot be negative.', 1;
     IF @OwnershipPercent <= 0 OR @OwnershipPercent > 100 THROW 50221, 'Ownership percent must be between 0 and 100.', 1;
+    IF @LossPercent is not null and (@LossPercent < 0 OR @LossPercent > 100) THROW 50221, 'Loss percent must be between 0 and 100.', 1;
     BEGIN TRANSACTION;
-    DECLARE @CurrentOwnership DECIMAL(7,2);
-    SELECT @CurrentOwnership = ISNULL(SUM(OwnershipPercent), 0) FROM Investors WITH (UPDLOCK, HOLDLOCK) WHERE Status = 1;
+    DECLARE @CurrentOwnership DECIMAL(7,2),@CurrentLossPercent DECIMAL(7,2);;
+    SELECT @CurrentOwnership = ISNULL(SUM(OwnershipPercent), 0) ,@CurrentLossPercent= ISNULL(SUM(LossPercent), 0)
+    FROM Investors WITH (UPDLOCK, HOLDLOCK) WHERE Status = 1;
     IF @CurrentOwnership + @OwnershipPercent > 100 THROW 50222, 'Active investor ownership cannot exceed 100 percent.', 1;
-    INSERT INTO Investors (Name, Email, Phone, InvestmentAmount, OwnershipPercent, JoinDate, Status)
-    VALUES (@Name, @Email, @Phone, @InvestmentAmount, @OwnershipPercent, @JoinDate, 1);
+    IF @LossPercent is not null and (@CurrentLossPercent + @LossPercent > 100) THROW 50222, 'Active investor loss cannot exceed 100 percent.', 1;
+    INSERT INTO Investors (Name, Email, Phone, InvestmentAmount, OwnershipPercent,LossPercent, JoinDate, Status)
+    VALUES (@Name, @Email, @Phone, @InvestmentAmount, @OwnershipPercent,@LossPercent, @JoinDate, 1);
     DECLARE @InvestorId INT = SCOPE_IDENTITY(); COMMIT TRANSACTION; SELECT @InvestorId;
 END;
 GO
@@ -160,7 +165,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_GetInvestors
 AS
 BEGIN
     SET NOCOUNT ON;
-    SELECT InvestorId, Name, Email, Phone, InvestmentAmount, OwnershipPercent, JoinDate, Status
+    SELECT InvestorId, Name, Email, Phone, InvestmentAmount, OwnershipPercent,LossPercent, JoinDate, Status
     FROM Investors ORDER BY Status DESC, Name;
 END;
 GO

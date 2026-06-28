@@ -63,6 +63,7 @@ public class ExpenseRepository(IConfiguration configuration) : IExpenseRepositor
         await connection.OpenAsync();
         await using var command = FinanceSql.Command("usp_CreateExpense", connection);
         command.Parameters.AddWithValue("@ExpenseTypeId", request.ExpenseTypeId);
+        
         command.Parameters.AddWithValue("@Amount", request.Amount);
         command.Parameters.AddNullable("@Description", request.Description);
         command.Parameters.AddWithValue("@ExpenseDate", request.ExpenseDate);
@@ -164,7 +165,9 @@ public class InvestorRepository(IConfiguration configuration) : IInvestorReposit
         await using var connection = new SqlConnection(connectionString); await connection.OpenAsync();
         await using var command = FinanceSql.Command("usp_CreateInvestor", connection);
         command.Parameters.AddWithValue("@Name", request.Name); command.Parameters.AddNullable("@Email", request.Email); command.Parameters.AddNullable("@Phone", request.Phone);
-        command.Parameters.AddWithValue("@InvestmentAmount", request.InvestmentAmount); command.Parameters.AddWithValue("@OwnershipPercent", request.OwnershipPercent); command.Parameters.AddWithValue("@JoinDate", request.JoinDate);
+        command.Parameters.AddWithValue("@InvestmentAmount", request.InvestmentAmount); command.Parameters.AddWithValue("@OwnershipPercent", request.OwnershipPercent); 
+        command.Parameters.AddWithValue("@LossPercent", request.LossPercent); 
+        command.Parameters.AddWithValue("@JoinDate", request.JoinDate);
         return Convert.ToInt32(await command.ExecuteScalarAsync());
     }
 
@@ -177,7 +180,7 @@ public class InvestorRepository(IConfiguration configuration) : IInvestorReposit
         {
             InvestorId = reader.GetInt32(reader.GetOrdinal("InvestorId")), Name = reader.GetString(reader.GetOrdinal("Name")),
             Email = reader.IsDBNull(reader.GetOrdinal("Email")) ? null : reader.GetString(reader.GetOrdinal("Email")), Phone = reader.IsDBNull(reader.GetOrdinal("Phone")) ? null : reader.GetString(reader.GetOrdinal("Phone")),
-            InvestmentAmount = reader.GetDecimal(reader.GetOrdinal("InvestmentAmount")), OwnershipPercent = reader.GetDecimal(reader.GetOrdinal("OwnershipPercent")),
+            InvestmentAmount = reader.GetDecimal(reader.GetOrdinal("InvestmentAmount")), OwnershipPercent = reader.GetDecimal(reader.GetOrdinal("OwnershipPercent")),LossPercent = reader.GetDecimal(reader.GetOrdinal("LossPercent")),
             JoinDate = reader.GetDateTime(reader.GetOrdinal("JoinDate")), Status = reader.GetBoolean(reader.GetOrdinal("Status"))
         });
         return result;

@@ -7,7 +7,7 @@ public class PaymentRequest
     public decimal Amount { get; set; }
     public string? TransactionRef { get; set; }
     public string? Status { get; set; }
-    public DateTime PaymentDate { get; set; } = DateTime.UtcNow;
+    public DateTime PaymentDate { get; set; } = DateTime.Now;
 }
 
 public class PaymentResponse

@@ -3,13 +3,18 @@ CREATE OR ALTER PROCEDURE dbo.usp_CreateSupplier
     @ContactPerson NVARCHAR(100) = NULL,
     @Phone NVARCHAR(20) = NULL,
     @Email NVARCHAR(100) = NULL,
-    @Address NVARCHAR(255) = NULL,
+    @AddressLine1 NVARCHAR(255) = NULL,
+    @AddressLine2 NVARCHAR(255) = NULL,
+    @City nvarchar(150)=null,
+    @PostalCode nvarchar(100)=null,
+    @Country nvarchar(150)=null,
     @Status BIT = 1
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO SupplierAddress(AddressLine1,CreatedAt) VALUES(@Address,GETDATE())  
+    INSERT INTO SupplierAddress(AddressLine1,AddressLine2,City,Country,Postalcode,CreatedAt)
+    VALUES(@AddressLine1,@AddressLine2,@City,@Country,@Postalcode,GETDATE())  
     DECLARE @SupAdsId INT=CAST(SCOPE_IDENTITY() AS INT)  
   
     INSERT INTO Suppliers (Name,AddressId,ContactPerson, Phone, Email, Status,CreatedAt)  
@@ -19,15 +24,15 @@ BEGIN
 END;
 GO
 
-CREATE or alter  PROCEDURE dbo.usp_GetSuppliers  
-AS  
-BEGIN  
-    SET NOCOUNT ON;  
-  
-     SELECT s.SupplierId, s.Name, s.ContactPerson, s.Phone, s.Email, concat(addr.AddressLine1,addr.AddressLine2) as address, s.Status, s.CreatedAt    
-    FROM Suppliers s inner join SupplierAddress addr on s.AddressId=addr.AddressId    
-    ORDER BY s.SupplierId DESC;   
-END;  
+CREATE or alter   PROCEDURE dbo.usp_GetSuppliers    
+AS    
+BEGIN    
+    SET NOCOUNT ON;    
+    
+     SELECT s.SupplierId, s.Name, s.ContactPerson, s.Phone, s.Email, concat(addr.AddressLine1,isnull(addr.AddressLine2,'')) as address,city,country,Postalcode, s.Status, s.CreatedAt     
+    FROM Suppliers s inner join SupplierAddress addr on s.AddressId=addr.AddressId      
+    ORDER BY s.SupplierId DESC;     
+END; 
 GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_CreateCustomer
@@ -70,7 +75,8 @@ CREATE OR ALTER PROCEDURE dbo.usp_CreatePurchaseOrder
     @ExpectedDate DATETIME2 = NULL,
     @Status NVARCHAR(50),
     @CreatedBy varchar(150),
-    @LinesJson NVARCHAR(MAX)
+    @LinesJson NVARCHAR(MAX),
+    @Expenses ExpensesType ReadOnly
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -142,10 +148,24 @@ BEGIN
     WHEN NOT MATCHED THEN
         INSERT (VariantId, WarehouseId, OnHandQty, ReservedQty)
         VALUES (source.VariantId, @WarehouseId, source.Qty, 0);
+    
 
+
+    --Add purchase expenses
+    INSERT INTO Expenses
+       ( 
+            [POId]
+           ,[ExpenseTypeId]
+           ,[Amount]
+           ,[Description]
+           ,[ExpenseDate]
+           ,[CreatedBy]
+       )
+    SELECT @POId,ExpenseTypeId,Amount,Description,ExpenseDate,@CreatedBy from @Expenses
+   
     INSERT INTO InventoryTransactions
         (VariantId, WarehouseId, TransactionType, Quantity, ReferenceType, ReferenceId, CreatedBy)
-    SELECT VariantId, @WarehouseId, 'PURCHASE', SUM(Qty), 'PURCHASE_ORDER', @POId, @CreatedBy
+    SELECT VariantId, @WarehouseId, @Status, SUM(Qty), 'PURCHASE_ORDER', @POId, @CreatedBy
     FROM @Lines
     GROUP BY VariantId;
 
@@ -153,6 +173,7 @@ BEGIN
 
     SELECT @POId AS POId;
 END;
+
 GO
 
 CREATE OR ALTER PROCEDURE dbo.usp_GetPurchaseOrders
@@ -265,7 +286,10 @@ CREATE OR ALTER PROCEDURE dbo.usp_CreateSalesOrder
     @OrderDate DATETIME2,
     @Status NVARCHAR(50),
     @ShippingFee DECIMAL(18,2) = 0,
-    @LinesJson NVARCHAR(MAX)
+    @LinesJson NVARCHAR(MAX),
+    @PaymentMethodId nvarchar(200),
+    @ReferenceId nvarchar(200)=NULL,
+    @PayStatus NVARCHAR(50)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -359,6 +383,9 @@ BEGIN
     INSERT INTO SalesOrderLines (OrderId, VariantId, Qty, UnitPrice, Discount, Tax)
     SELECT @OrderId, VariantId, Qty, UnitPrice, Discount, Tax
     FROM @Lines;
+
+    INSERT INTO Payments(OrderId,Amount,PaymentDate,PaymentMethodId,TransactionRef,Status)
+    VALUES(@OrderId,@GrandTotal,@OrderDate,@PaymentMethodId,@ReferenceId,@PayStatus)
 
     UPDATE i
     SET OnHandQty = i.OnHandQty - allocated.Qty
@@ -699,35 +726,35 @@ BEGIN
 END;
 GO
 
-CREATE OR ALTER PROCEDURE dbo.usp_GetMarketplaceSettlementById
-    @SettlementId BIGINT
-AS
-BEGIN
-    SET NOCOUNT ON;
+--CREATE OR ALTER PROCEDURE dbo.usp_GetMarketplaceSettlementById
+--    @SettlementId BIGINT
+--AS
+--BEGIN
+--    SET NOCOUNT ON;
 
-    SELECT
-        ms.SettlementId,
-        ms.OrderId,
-        so.ExternalOrderId,
-        so.OrderDate,
-        so.GrandTotal AS OrderGrandTotal,
-        ms.ChannelId,
-        sc.ChannelName,
-        cust.Name AS CustomerName,
-        ms.SaleAmount,
-        ms.MarketplaceCommission,
-        ms.ShippingCharge,
-        ms.TaxDeduction,
-        ms.NetReceived,
-        ms.SettlementDate,
-        ms.Status
-    FROM MarketplaceSettlements ms
-    INNER JOIN SalesOrders so ON so.OrderId = ms.OrderId
-    INNER JOIN SalesChannels sc ON sc.ChannelId = ms.ChannelId
-    LEFT JOIN Customers cust ON cust.CustomerId = so.CustomerId
-    WHERE ms.SettlementId = @SettlementId;
-END;
-GO
+--    SELECT
+--        ms.SettlementId,
+--        ms.OrderId,
+--        so.ExternalOrderId,
+--        so.OrderDate,
+--        so.GrandTotal AS OrderGrandTotal,
+--        ms.ChannelId,
+--        sc.ChannelName,
+--        cust.Name AS CustomerName,
+--        ms.SaleAmount,
+--        ms.MarketplaceCommission,
+--        ms.ShippingCharge,
+--        ms.TaxDeduction,
+--        ms.NetReceived,
+--        ms.SettlementDate,
+--        ms.Status
+--    FROM MarketplaceSettlements ms
+--    INNER JOIN SalesOrders so ON so.OrderId = ms.OrderId
+--    INNER JOIN SalesChannels sc ON sc.ChannelId = ms.ChannelId
+--    LEFT JOIN Customers cust ON cust.CustomerId = so.CustomerId
+--    WHERE ms.SettlementId = @SettlementId;
+--END;
+--GO
 
 IF COL_LENGTH('SalesReturns', 'RefundStatus') IS NULL
     ALTER TABLE SalesReturns ADD RefundStatus NVARCHAR(50) NOT NULL CONSTRAINT DF_SalesReturns_RefundStatus DEFAULT 'PENDING';
@@ -791,7 +818,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_CreateSalesReturn
     @Status NVARCHAR(50) = 'REQUESTED',
     @RefundStatus NVARCHAR(50) = 'PENDING',
     @RefundMethod NVARCHAR(50) = NULL,
-    @RefundAmount DECIMAL(18,2) = 0,
+    --@RefundAmount DECIMAL(18,2) = 0,
     @ReturnShippingFee DECIMAL(18,2) = 0,
     @MarketplaceFee DECIMAL(18,2) = 0,
     @DeliveryFeeRefunded BIT = 0,
@@ -902,7 +929,11 @@ BEGIN
     ) stock;
 
     DECLARE @ReturnId BIGINT;
+    DECLARE @GrandTotal DECIMAL(18,2);
 
+    SELECT
+        @GrandTotal = SUM((Qty * RefundAmount))
+    FROM @Lines;
     BEGIN TRANSACTION;
 
     INSERT INTO SalesReturns
@@ -928,7 +959,7 @@ BEGIN
         @Status,
         @RefundStatus,
         @RefundMethod,
-        @RefundAmount,
+        @GrandTotal,
         @ReturnShippingFee,
         @MarketplaceFee,
         @DeliveryFeeRefunded,
@@ -1179,7 +1210,7 @@ BEGIN
         0 AS PerformanceScore
     FROM Employees e
     LEFT JOIN Salary sal ON e.EmployeeId = sal.EmployeeId AND sal.IsActive = 1
-    LEFT JOIN EmployeeCommission ec ON e.EmployeeId = ec.EmployeeId
+    LEFT JOIN EmployeeCommissions ec ON e.EmployeeId = ec.CommissionId
     WHERE @EmployeeId IS NULL OR e.EmployeeId = @EmployeeId
     GROUP BY e.EmployeeId, e.EmployeeName, sal.BaseSalary;
 END;

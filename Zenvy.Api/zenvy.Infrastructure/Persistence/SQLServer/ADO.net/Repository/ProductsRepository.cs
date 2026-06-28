@@ -45,11 +45,20 @@ public class ProductsRepository(IConfiguration configuration) : IProductsReposit
                 var variantParam = command.Parameters.AddWithValue("@Variants", CreateVariantTable(request.ProductVariants));
                 variantParam.SqlDbType = SqlDbType.Structured;
                 variantParam.TypeName = "dbo.ProductVariantType";
+                //variant price into table 
+                var priceParam = command.Parameters.AddWithValue(
+                    "@VariantPrice",
+                    CreateVariantPriceTable(request.ProductVariants));
+
+                priceParam.SqlDbType = SqlDbType.Structured;
+                priceParam.TypeName = "dbo.ProductVariantPriceType";
+
 
                 // Structured Parameter: Images
                 var imageParam = command.Parameters.AddWithValue("@Images", CreateImageTable(request.ProductImages));
                 imageParam.SqlDbType = SqlDbType.Structured;
                 imageParam.TypeName = "dbo.ProductImageType";
+
 
                 // CRITICAL FIX: Stored Procedure returns a result set (2 columns, 1 row), NOT a single scalar value.
                 using var reader = await command.ExecuteReaderAsync();
@@ -58,7 +67,7 @@ public class ProductsRepository(IConfiguration configuration) : IProductsReposit
                 {
                     productMasterId = Convert.ToInt32(reader["ProductMasterId"]);
                 }
-                
+
                 reader.Close(); // Explicitly close reader before committing transaction
                 transaction.Commit();
                 return productMasterId;
@@ -75,7 +84,40 @@ public class ProductsRepository(IConfiguration configuration) : IProductsReposit
             throw;
         }
     }
+    private static DataTable CreateVariantPriceTable(
+        List<ProductVariants> variants)
+    {
+        var table = new DataTable();
 
+        table.Columns.Add("SKU", typeof(string));
+        table.Columns.Add("CostPrice", typeof(decimal));
+        table.Columns.Add("SalePrice", typeof(decimal));
+        table.Columns.Add("EffectiveFrom", typeof(DateTime));
+        table.Columns.Add("EffectiveTo", typeof(DateTime));
+        table.Columns.Add("PlatformFee", typeof(decimal));
+        table.Columns.Add("Discount", typeof(int));
+        table.Columns.Add("DiscountType", typeof(string));
+
+        foreach (var variant in variants)
+        {
+            var price = variant.ProductVariantPrice;
+
+            table.Rows.Add(
+                variant.SKU,
+                price.CostPrice,
+                price.SalePrice,
+                price.EffectiveFrom,
+                price.EffectiveTo.HasValue
+                    ? (object)price.EffectiveTo.Value
+                    : DBNull.Value,
+                price.PlatformFee,
+                price.Discount,
+                price.DiscountType.Trim()
+            );
+        }
+
+        return table;
+    }
     public async Task<IReadOnlyList<int>> BulkCreateAsync(IReadOnlyCollection<CreateProductRequest> requests)
     {
         using var connection = new SqlConnection(sqlConnectionString);
@@ -428,8 +470,7 @@ ORDER BY ProductName;", connection);
         table.Columns.Add("Material", typeof(string));
         table.Columns.Add("Gender", typeof(string));
         table.Columns.Add("Season", typeof(string));
-        table.Columns.Add("CurrentPrice", typeof(decimal));
-        table.Columns.Add("Status", typeof(bool)); 
+        table.Columns.Add("Status", typeof(bool));
 
         foreach (var item in variants)
         {
@@ -441,7 +482,6 @@ ORDER BY ProductName;", connection);
                 item.Material ?? (object)DBNull.Value,
                 item.Gender ?? (object)DBNull.Value,
                 item.Season ?? (object)DBNull.Value,
-                item.CurrentPrice,
                 item.Status
             );
         }
@@ -536,18 +576,39 @@ WHERE ProductMasterId=@ProductMasterId;", connection, transaction))
         };
     }
 
-    private static async Task<List<ProductVariants>> GetVariantsAsync(SqlConnection connection, int productMasterId)
+    private static async Task<List<ProductVariants>> GetVariantsAsync(
+        SqlConnection connection,
+        int productMasterId)
     {
         var variants = new List<ProductVariants>();
 
         using var command = new SqlCommand(@"
-SELECT SKU, Barcode, Size, Color, Material, Gender, Season, CurrentPrice, Status
-FROM ProductVariants
-WHERE ProductMasterId = @ProductMasterId;", connection);
+        SELECT
+            pv.SKU,
+            pv.Barcode,
+            pv.Size,
+            pv.Color,
+            pv.Material,
+            pv.Gender,
+            pv.Season,
+            pv.Status,
+            pvp.CostPrice,
+            pvp.SalePrice,
+            pvp.EffectiveFrom,
+            pvp.EffectiveTo,
+            pvp.PlatformFee,
+            pvp.Discount,
+            pvp.DiscountType
+        FROM ProductVariants pv
+        LEFT JOIN ProductVariantPrice pvp
+            ON pv.VariantId = pvp.VariantId
+        WHERE pv.ProductMasterId = @ProductMasterId;",
+            connection);
 
         command.Parameters.AddWithValue("@ProductMasterId", productMasterId);
 
         using var reader = await command.ExecuteReaderAsync();
+
         while (await reader.ReadAsync())
         {
             variants.Add(new ProductVariants
@@ -559,14 +620,33 @@ WHERE ProductMasterId = @ProductMasterId;", connection);
                 Material = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
                 Gender = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
                 Season = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
-                CurrentPrice = reader.IsDBNull(7) ? 0 : reader.GetDecimal(7),
-                Status = reader.GetBoolean(8)
+                Status = !reader.IsDBNull(7) && reader.GetBoolean(7),
+
+                ProductVariantPrice = new ProductVariantPrice
+                {
+                    CostPrice = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
+                    SalePrice = reader.IsDBNull(9) ? 0 : reader.GetDecimal(9),
+                    EffectiveFrom = reader.IsDBNull(10)
+                        ? DateTime.MinValue
+                        : reader.GetDateTime(10),
+                    EffectiveTo = reader.IsDBNull(11)
+                        ? null
+                        : reader.GetDateTime(11),
+                    PlatformFee = reader.IsDBNull(12)
+                        ? 0
+                        : reader.GetDecimal(12),
+                    Discount = reader.IsDBNull(13)
+                        ? 0
+                        : reader.GetInt32(13),
+                    DiscountType = reader.IsDBNull(14)
+                        ? string.Empty
+                        : reader.GetString(14)
+                }
             });
         }
 
         return variants;
     }
-
     private static async Task<List<ProductImages>> GetImagesAsync(SqlConnection connection, int productMasterId)
     {
         var images = new List<ProductImages>();
@@ -634,7 +714,7 @@ WHERE ProductMasterId=@ProductMasterId AND SKU=@SKU;", connection, transaction);
 
             using var insertCommand = new SqlCommand(@"
 INSERT INTO ProductVariants (ProductMasterId, ProductId, SKU, Barcode, Size, Color, Material, Gender, Season, CurrentPrice, Status)
-VALUES (@ProductMasterId, @ProductId, @SKU, @Barcode, @Size, @Color, @Material, @Gender, @Season, @CurrentPrice, @Status);", connection, transaction);
+VALUES (@ProductMasterId, @ProductId, @SKU, @Barcode, @Size, @Color, @Material, @Gender, @Season, @Status);", connection, transaction);
             insertCommand.Parameters.AddWithValue("@ProductId", productId.Value);
             AddVariantParameters(insertCommand, productMasterId, variant);
             await insertCommand.ExecuteNonQueryAsync();
@@ -670,7 +750,6 @@ VALUES (@ProductMasterId, @ProductId, @SKU, @Barcode, @Size, @Color, @Material, 
         command.Parameters.AddWithValue("@Material", (object?)variant.Material ?? DBNull.Value);
         command.Parameters.AddWithValue("@Gender", (object?)variant.Gender ?? DBNull.Value);
         command.Parameters.AddWithValue("@Season", (object?)variant.Season ?? DBNull.Value);
-        command.Parameters.AddWithValue("@CurrentPrice", variant.CurrentPrice);
         command.Parameters.AddWithValue("@Status", variant.Status);
     }
 

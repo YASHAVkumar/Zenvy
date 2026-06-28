@@ -25,9 +25,9 @@ public class DashboardRepository(IConfiguration configuration) : IDashboardRepos
             TodaysSales = reader.GetDecimal(reader.GetOrdinal("TodaysSales")),
             MonthlySales = reader.GetDecimal(reader.GetOrdinal("MonthlySales")),
             MonthlyProfit = reader.GetDecimal(reader.GetOrdinal("MonthlyProfit")),
-            InventoryValue = reader.GetDecimal(reader.GetOrdinal("InventoryValue")),
-            AvailableCash = reader.GetDecimal(reader.GetOrdinal("AvailableCash")),
-            ReserveFund = reader.GetDecimal(reader.GetOrdinal("ReserveFund")),
+            InventoryValue = reader.GetInt32(reader.GetOrdinal("InventoryValue")),
+            AvailableCash = reader.GetInt32(reader.GetOrdinal("AvailableCash")),
+            ReserveFund = reader.GetInt32(reader.GetOrdinal("ReserveFund")),
             InvestorLiability = reader.GetDecimal(reader.GetOrdinal("InvestorLiability")),
             PendingOrders = reader.GetInt32(reader.GetOrdinal("PendingOrders")),
             PendingReturns = reader.GetInt32(reader.GetOrdinal("PendingReturns"))

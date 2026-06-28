@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using zenvy.application.DTOs.SalesOrders;
 using zenvy.application.Interfaces.Repositories;
+using zenvy.Domain.Enums;
 
 namespace zenvy.infrastructure.persistence.sqlserver.ado.net.repository;
 
@@ -22,10 +23,12 @@ public class SalesOrderRepository(IConfiguration configuration) : ISalesOrderRep
         command.Parameters.AddWithValue("@CreatedBy", Guid.Parse(request.CreatedBy));
         command.Parameters.AddWithValue("@ExternalOrderId", (object?)request.ExternalOrderId ?? DBNull.Value);
         command.Parameters.AddWithValue("@OrderDate", request.OrderDate);
-        command.Parameters.AddWithValue("@Status", request.Status);
+        command.Parameters.AddWithValue("@Status", EnumMappings.GetOrderStatusValue(request.Status));
         command.Parameters.AddWithValue("@ShippingFee", request.ShippingFee);
         command.Parameters.AddWithValue("@LinesJson", JsonSerializer.Serialize(request.Lines));
-
+        command.Parameters.AddWithValue("@PaymentMethodId", request.PaymentMethodId);
+        command.Parameters.AddWithValue("@ReferenceId", (object?)request.ReferenceId ?? DBNull.Value);
+        command.Parameters.AddWithValue("@PayStatus", EnumMappings.GetPaymentStatusValue(request.PayStatus));
         return Convert.ToInt64(await command.ExecuteScalarAsync());
     }
 

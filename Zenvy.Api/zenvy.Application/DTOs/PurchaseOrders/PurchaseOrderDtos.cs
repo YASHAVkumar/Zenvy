@@ -1,3 +1,5 @@
+using zenvy.Domain.Enums;
+
 namespace zenvy.application.DTOs.PurchaseOrders;
 
 public class PurchaseOrderRequest
@@ -5,13 +7,21 @@ public class PurchaseOrderRequest
     public int SupplierId { get; set; }
     public int WarehouseId { get; set; }
     public string PONumber { get; set; } = string.Empty;
-    public DateTime OrderDate { get; set; } = DateTime.UtcNow;
+    public DateTime OrderDate { get; set; } = DateTime.Now;
     public DateTime? ExpectedDate { get; set; }
-    public string Status { get; set; } = "RECEIVED";
+    public PurchaseOrderStatus Status { get; set; } = PurchaseOrderStatus.RECEIVED;
     public string CreatedBy { get; set; } = string.Empty;
     public List<PurchaseOrderLineRequest> Lines { get; set; } = [];
+    public List<ExpenseRequestExt> Expenses { get; set; } = [];
 }
 
+public class ExpenseRequestExt
+{
+    public int ExpenseTypeId { get; set; }
+    public decimal Amount { get; set; }
+    public string? Description { get; set; }
+    public DateTime ExpenseDate { get; set; } = DateTime.Now;
+}
 public class PurchaseOrderLineRequest
 {
     public int VariantId { get; set; }

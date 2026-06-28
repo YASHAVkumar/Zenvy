@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using zenvy.application.DTOs.PurchaseOrders;
 using zenvy.application.Interfaces.Repositories;
+using zenvy.Domain.Enums;
 
 namespace zenvy.infrastructure.persistence.sqlserver.ado.net.repository;
 
@@ -22,9 +23,24 @@ public class PurchaseOrderRepository(IConfiguration configuration) : IPurchaseOr
         command.Parameters.AddWithValue("@PONumber", request.PONumber);
         command.Parameters.AddWithValue("@OrderDate", request.OrderDate);
         command.Parameters.AddWithValue("@ExpectedDate", (object?)request.ExpectedDate ?? DBNull.Value);
-        command.Parameters.AddWithValue("@Status", request.Status);
+        command.Parameters.AddWithValue("@Status", EnumMappings.GetPurchaseOrderStatusValue(request.Status));
         command.Parameters.AddWithValue("@CreatedBy", Guid.Parse(request.CreatedBy));
         command.Parameters.AddWithValue("@LinesJson", JsonSerializer.Serialize(request.Lines));
+        //datatable for expenses
+        var expensesTable = new DataTable();
+        expensesTable.Columns.Add("ExpenseTypeId", typeof(int));
+        expensesTable.Columns.Add("Amount", typeof(decimal));
+        expensesTable.Columns.Add("Description", typeof(string));
+        expensesTable.Columns.Add("ExpenseDate", typeof(DateTime));
+        foreach (var expense in request.Expenses)
+        {
+            expensesTable.Rows.Add(expense.ExpenseTypeId,
+            expense.Amount, 
+            (object?)expense.Description ?? DBNull.Value,
+            expense.ExpenseDate);
+        }
+
+        command.Parameters.AddWithValue("@Expenses", expensesTable);
 
         return Convert.ToInt64(await command.ExecuteScalarAsync());
     }

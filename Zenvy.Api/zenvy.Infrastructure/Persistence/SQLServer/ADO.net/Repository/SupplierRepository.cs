@@ -20,7 +20,11 @@ public class SupplierRepository(IConfiguration configuration) : ISupplierReposit
         command.Parameters.AddWithValue("@ContactPerson", (object?)request.ContactPerson ?? DBNull.Value);
         command.Parameters.AddWithValue("@Phone", (object?)request.Phone ?? DBNull.Value);
         command.Parameters.AddWithValue("@Email", (object?)request.Email ?? DBNull.Value);
-        command.Parameters.AddWithValue("@Address", (object?)request.Address ?? DBNull.Value);
+        command.Parameters.AddWithValue("@AddressLine1", (object?)request?.Address?.AddressLine1 ?? DBNull.Value);
+        command.Parameters.AddWithValue("@AddressLine2", (object?)request?.Address?.AddressLine2 ?? DBNull.Value);
+        command.Parameters.AddWithValue("@City", (object?)request?.Address?.City ?? DBNull.Value);
+        command.Parameters.AddWithValue("@Country", (object?)request?.Address?.Country ?? DBNull.Value);
+        command.Parameters.AddWithValue("@PostalCode", (object?)request?.Address?.PostalCode ?? DBNull.Value);    
         command.Parameters.AddWithValue("@Status", request.Status);
 
         return Convert.ToInt32(await command.ExecuteScalarAsync());

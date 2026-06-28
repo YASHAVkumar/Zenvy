@@ -13,6 +13,9 @@ public class InvestorController(IInvestorService service) : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(request.Name)) return BadRequest("Name is required.");
         if (request.OwnershipPercent is <= 0 or > 100) return BadRequest("OwnershipPercent must be between 0 and 100.");
+        
+        if (request.LossPercent is <0 or > 100) return BadRequest("LossPercent must be between 0 and 100.");
+        
         return Ok(new { InvestorId = await service.CreateAsync(request) });
     }
 

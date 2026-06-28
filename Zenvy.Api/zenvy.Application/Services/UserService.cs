@@ -20,7 +20,7 @@ public class UserService(IUserRepository repository, IUnitOfWork unitOfWork) : I
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             RoleId = dto.Role.RoleId,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now
         };
 
         await repository.AddAsync(user);

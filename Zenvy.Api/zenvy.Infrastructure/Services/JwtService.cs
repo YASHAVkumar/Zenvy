@@ -44,7 +44,7 @@ public class JwtService(IConfiguration configuration) : IJwtService
 
         var token =
             new JwtSecurityToken(
-                expires: DateTime.UtcNow.AddDays(7),
+                expires: DateTime.Now.AddDays(7),
                 issuer: _configuration?["Jwt:Issuer"],
                 audience: _configuration?["Jwt:Audience"],
                 claims: claims,

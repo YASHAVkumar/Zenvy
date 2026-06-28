@@ -14,5 +14,5 @@ public class DashboardResponse<T>
     public bool Success { get; set; }
     public string Message { get; set; } = string.Empty;
     public T? Data { get; set; }
-    public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
+    public DateTime GeneratedAt { get; set; } = DateTime.Now;
 }

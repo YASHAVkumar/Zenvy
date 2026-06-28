@@ -14,9 +14,10 @@ public class ExpenseTypeResponse : ExpenseTypeRequest
 public class ExpenseRequest
 {
     public int ExpenseTypeId { get; set; }
+    public int POId{ get; set; }
     public decimal Amount { get; set; }
     public string? Description { get; set; }
-    public DateTime ExpenseDate { get; set; } = DateTime.UtcNow;
+    public DateTime ExpenseDate { get; set; } = DateTime.Now;
     public string CreatedBy { get; set; } = string.Empty;
 }
 
@@ -83,7 +84,8 @@ public class InvestorRequest
     public string? Phone { get; set; }
     public decimal InvestmentAmount { get; set; }
     public decimal OwnershipPercent { get; set; }
-    public DateTime JoinDate { get; set; } = DateTime.UtcNow;
+    public decimal LossPercent { get; set; }=0.0m;
+    public DateTime JoinDate { get; set; } = DateTime.Now;
 }
 
 public class InvestorResponse : InvestorRequest

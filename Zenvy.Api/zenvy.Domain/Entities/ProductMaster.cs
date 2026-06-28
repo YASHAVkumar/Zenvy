@@ -37,9 +37,19 @@ namespace zenvy.domain.Entities
         public string Material { get; set; }
         public string Gender { get; set; }
         public string Season { get; set; }
-        public decimal CurrentPrice { get; set; }
         public bool Status { get; set; }
+        public ProductVariantPrice ProductVariantPrice { get; set; }=new();    
+    }
 
+    public class ProductVariantPrice
+    {
+        public decimal CostPrice { get; set; }
+        public decimal SalePrice { get; set; }
+        public DateTime EffectiveFrom { get; set; }
+        public DateTime? EffectiveTo { get; set; }
+        public decimal PlatformFee { get; set; }
+        public int Discount { get; set; }
+        public string DiscountType { get; set; }
     }
 
 

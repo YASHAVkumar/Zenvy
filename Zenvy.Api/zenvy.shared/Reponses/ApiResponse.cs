@@ -7,7 +7,7 @@ public sealed class ApiResponse<T>
     public T? Data { get; init; }
     public object? Errors { get; init; }
     public string TraceId { get; init; } = string.Empty;
-    public DateTime TimestampUtc { get; init; } = DateTime.UtcNow;
+    public DateTime TimestampUtc { get; init; } = DateTime.Now;
 
     public static ApiResponse<T> Succeeded(T? data, string message, string traceId) => new()
     {

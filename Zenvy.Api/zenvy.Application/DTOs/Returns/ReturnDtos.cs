@@ -1,14 +1,16 @@
+using zenvy.Domain.Enums;
+
 namespace zenvy.application.DTOs.Returns;
 
 public class ReturnRequest
 {
     public long OrderId { get; set; }
-    public DateTime ReturnDate { get; set; } = DateTime.UtcNow;
-    public string? Reason { get; set; }
-    public string Status { get; set; } = "REQUESTED";
-    public string RefundStatus { get; set; } = "PENDING";
+    public DateTime ReturnDate { get; set; } = DateTime.Now;
+    public ReturnReason? Reason { get; set; }= ReturnReason.OTHER;
+    public RefundStatus RefundStatus { get; set; } = Domain.Enums.RefundStatus.PROCESSED;
+    public ReturnStatus Status { get; set; } = ReturnStatus.COMPLETED;
     public string? RefundMethod { get; set; }
-    public decimal RefundAmount { get; set; }
+   // public decimal RefundAmount { get; set; }
     public decimal ReturnShippingFee { get; set; }
     public decimal MarketplaceFee { get; set; }
     public bool DeliveryFeeRefunded { get; set; }

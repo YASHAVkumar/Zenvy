@@ -84,6 +84,26 @@ public static class EnumMappings
         { ChannelType.WALK_IN, "Walk-In" },
         { ChannelType.OTHER, "Other" }
     };
+    // {PaymentStatus.PENDING,"PENDING"},
+    // {PaymentStatus.INITIATED,"INITIATED},
+    // {PaymentStatus.AUTHORIZED,"AUTHORIZED"},
+    // {PaymentStatus.CAPTURED,"CAPTURED"},
+    // {PaymentStatus.COMPLETED,"COMPLETED"},
+    // {PaymentStatus.FAILED,"FAILED"},
+    // {PaymentStatus.CANCELLED,"CANCELLED" },
+    // {PaymentStatus.REFUNDED,"REFUNDED" }
+    public static readonly Dictionary<PaymentStatus, string> PaymentStatusMap = new()
+    {
+        {PaymentStatus.PENDING,"PENDING"},
+        {PaymentStatus.INITIATED,"INITIATED"},
+        {PaymentStatus.AUTHORIZED,"AUTHORIZED"},
+        {PaymentStatus.CAPTURED,"CAPTURED"},
+        {PaymentStatus.COMPLETED,"COMPLETED"},
+        {PaymentStatus.FAILED,"FAILED"},
+        {PaymentStatus.CANCELLED,"CANCELLED" },
+        {PaymentStatus.REFUNDED,"REFUNDED" }
+    };
+
 
     /// <summary>
     /// Get string value from enum
@@ -114,4 +134,5 @@ public static class EnumMappings
     /// Get display name from channel type
     /// </summary>
     public static string GetChannelTypeName(ChannelType channelType) => ChannelTypeMap.GetValueOrDefault(channelType, channelType.ToString());
+   public static string GetPaymentStatusValue(PaymentStatus status) => PaymentStatusMap.GetValueOrDefault(status, status.ToString());
 }

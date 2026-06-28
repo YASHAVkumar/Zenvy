@@ -285,3 +285,62 @@ GET    /api/suppliers
 POST   /api/suppliers
 PUT    /api/suppliers/{id}
 DELETE /api/suppliers/{id}
+
+
+Investor
+1	myra invester	myra@gmail.com	90787878	40000.00	5.00	2026-06-22 20:41:25.1266667	1
+
+
+Purchase and sales 
+
+
+supplier punjab
+
+Warehouse
+ myntra
+ 
+ purchase from myntra
+T-Shirt cat --
+zenvy brand ---   
+ [Product Round Neck T-Shirt (s 1000,m,l,xl),Round bottom Shirt(s 500,m,l,xl)]
+ 
+ purchased cost -- 27200.00 +200.00  =27400.00
+Round Neck T-Shirt s 15010.00 
+Round bottom Shirt s 12390.00
+ 
+Inventory stock 
+Round Neck T-Shirt s qty 10  
+Round bottom Shirt s qty 10
+
+Expenses 
+
+ExpenseId	POId	ExpenseTypeId	Amount	Description	ExpenseDate	CreatedBy
+2	2	6	40.00	lefafe	2026-06-22 20:35:31.4466667	5F38CF57-F3F5-4EF4-8554-D8678F9ED7B4
+ 
+Sales 
+  customer cust1 
+OrderId	CustomerId	ChannelId	CreatedBy	ExternalOrderId	OrderDate	Status	SubTotal	Discount	Tax	ShippingFee	GrandTotal	CreatedAt
+	2	2				6	5F38CF57-F3F5-4EF4-8554-D8678F9ED7B4	NULL	2026-06-23 19:58:50.6300000	Confirmed	6000.00	5.00	0.00	500.00	6495.00	2026-06-23 01:45:39.1100000
+
+orders 
+
+OrderLineId	OrderId	VariantId	Qty	UnitPrice	Discount	Tax	Line Total
+		1	2	6	1	1200.00	0.00	0.00	1200.00
+		2	2	2	2	2400.00	5.00	0.00	4795.00
+
+
+--OWNER_INVESTMENT
+--INVESTOR_INVESTMENT
+--LOAN_RECEIVED
+--PURCHASE_PAYMENT
+--EXPENSE_PAYMENT
+--SALARY_PAYMENT
+--SALES_RECEIVED
+--MARKETPLACE_SETTLEMENT
+--INVESTOR_PROFIT_PAID
+--INVESTOR_WITHDRAWAL
+--OWNER_WITHDRAWAL
+--LOAN_REPAYMENT
+--BANK_CHARGE
+--OTHER_INCOME
+--OTHER_EXPENSE

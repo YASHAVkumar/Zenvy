@@ -4,6 +4,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using zenvy.application.DTOs.Returns;
 using zenvy.application.Interfaces.Repositories;
+using zenvy.Domain.Enums;
 
 namespace zenvy.infrastructure.persistence.sqlserver.ado.net.repository;
 
@@ -19,11 +20,10 @@ public class ReturnRepository(IConfiguration configuration) : IReturnRepository
         using var command = CreateStoredProcedureCommand("usp_CreateSalesReturn", connection);
         command.Parameters.AddWithValue("@OrderId", request.OrderId);
         command.Parameters.AddWithValue("@ReturnDate", request.ReturnDate);
-        command.Parameters.AddWithValue("@Reason", (object?)request.Reason ?? DBNull.Value);
-        command.Parameters.AddWithValue("@Status", request.Status);
-        command.Parameters.AddWithValue("@RefundStatus", request.RefundStatus);
+        command.Parameters.AddWithValue("@Reason", (object?)request.Reason?.ToString() ?? DBNull.Value);
+        command.Parameters.AddWithValue("@Status", EnumMappings.GetReturnStatusValue(request.Status));
+        command.Parameters.AddWithValue("@RefundStatus", EnumMappings.GetRefundStatusValue(request.RefundStatus));
         command.Parameters.AddWithValue("@RefundMethod", (object?)request.RefundMethod ?? DBNull.Value);
-        command.Parameters.AddWithValue("@RefundAmount", request.RefundAmount);
         command.Parameters.AddWithValue("@ReturnShippingFee", request.ReturnShippingFee);
         command.Parameters.AddWithValue("@MarketplaceFee", request.MarketplaceFee);
         command.Parameters.AddWithValue("@DeliveryFeeRefunded", request.DeliveryFeeRefunded);

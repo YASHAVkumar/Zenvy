@@ -13,7 +13,7 @@ public class SalesOrderRequestWithEnum
     public int ChannelId { get; set; }
     public string CreatedBy { get; set; } = string.Empty;
     public string? ExternalOrderId { get; set; }
-    public DateTime OrderDate { get; set; } = DateTime.UtcNow;
+    public DateTime OrderDate { get; set; } = DateTime.Now;
     
     // CHANGED: From 'string' to 'OrderStatus' enum
     [JsonConverter(typeof(JsonStringEnumConverter))]

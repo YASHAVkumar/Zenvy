@@ -10,12 +10,12 @@ namespace zenvy.api.Controller;
 [ApiController]
 public class InventoryController(IInventoryService inventoryService) : ControllerBase
 {
-    [HttpPost]
-    public async Task<IActionResult> CreateInventory([FromBody] InventoryRequest request)
-    {
-        var inventoryId = await inventoryService.CreateInventoryAsync(request);
-        return Ok(new { InventoryId = inventoryId });
-    }
+    // [HttpPost]
+    // public async Task<IActionResult> CreateInventory([FromBody] InventoryRequest request)
+    // {
+    //     var inventoryId = await inventoryService.CreateInventoryAsync(request);
+    //     return Ok(new { InventoryId = inventoryId });
+    // }
 
     [HttpGet]
     public async Task<IActionResult> GetInventory()

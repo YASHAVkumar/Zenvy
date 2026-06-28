@@ -1,3 +1,5 @@
+using zenvy.Domain.Enums;
+
 namespace zenvy.application.DTOs.SalesOrders;
 
 public class SalesOrderRequest
@@ -6,10 +8,13 @@ public class SalesOrderRequest
     public int ChannelId { get; set; }
     public string CreatedBy { get; set; } = string.Empty;
     public string? ExternalOrderId { get; set; }
-    public DateTime OrderDate { get; set; } = DateTime.UtcNow;
-    public string Status { get; set; } = "CONFIRMED";
+    public DateTime OrderDate { get; set; } = DateTime.Now;
+    public OrderStatus Status { get; set; } = OrderStatus.CONFIRMED;
     public decimal ShippingFee { get; set; }
     public List<SalesOrderLineRequest> Lines { get; set; } = [];
+    public int PaymentMethodId { get; set; }
+    public string? ReferenceId { get; set; }
+    public PaymentStatus PayStatus { get; set; }=PaymentStatus.COMPLETED;
 }
 
 public class SalesOrderLineRequest
