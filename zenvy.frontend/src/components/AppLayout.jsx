@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { BarChart3, Boxes, Database, GitBranch, LayoutDashboard, LogOut, Package, WalletCards } from 'lucide-react';
+import { BarChart3, Boxes, Database, FileText, GitBranch, LayoutDashboard, LogOut, Package, ShieldCheck, WalletCards } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSignalR } from '../signalr/signalrProvider';
 import { logout } from '../features/auth/authSlice';
@@ -12,13 +12,16 @@ const navigation = [
   { to: '/workspace', label: 'All data', icon: Database, roles: ['Admin', 'Manager', 'TeamLead'] },
   { to: '/finance', label: 'Finance', icon: WalletCards, roles: ['Admin', 'Manager', 'Accountant'] },
   { to: '/products', label: 'Products', icon: Package },
+  { to: '/admin', label: 'People & access', icon: ShieldCheck, roles: ['Admin'] },
+  { to: '/manual', label: 'Role manual', icon: FileText },
 ];
+const hasRole = (userRole, allowedRoles) => !allowedRoles || allowedRoles.some((role) => role.toLowerCase() === String(userRole || '').trim().toLowerCase());
 
 const AppLayout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state) => state.auth.user);
-  const visibleNavigation = navigation.filter((item) => !item.roles || item.roles.includes(user?.role || ''));
+  const visibleNavigation = navigation.filter((item) => hasRole(user?.role, item.roles));
   const { connected, notifications, dismissNotification } = useSignalR();
 
   const handleLogout = () => {

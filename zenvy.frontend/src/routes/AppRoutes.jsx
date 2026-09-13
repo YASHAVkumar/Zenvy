@@ -12,6 +12,8 @@ import FinancePage from '../pages/FinancePage';
 import OperationsPage from '../pages/OperationsPage';
 import WorkflowPage from '../pages/WorkflowPage';
 import WorkspacePage from '../pages/WorkspacePage';
+import AdminPage from '../pages/AdminPage';
+import ManualPage from '../pages/ManualPage';
 
 const router = createBrowserRouter([
   {
@@ -35,6 +37,8 @@ const router = createBrowserRouter([
           { path: 'workspace', element: <WorkspacePage /> },
           { path: 'finance', element: <FinancePage /> },
           { path: 'products', element: <ProductsPage /> },
+          { path: 'admin', element: <AdminPage /> },
+          { path: 'manual', element: <ManualPage /> },
         ],
       },
       {

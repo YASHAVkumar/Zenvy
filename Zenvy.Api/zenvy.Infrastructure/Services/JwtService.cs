@@ -39,7 +39,7 @@ public class JwtService(IConfiguration configuration) : IJwtService
 
                 new Claim(
                     ClaimTypes.Role,
-                    user.Role)
+                    CanonicalRole(user.Role))
             };
 
         var token =
@@ -55,4 +55,7 @@ public class JwtService(IConfiguration configuration) : IJwtService
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    private static string CanonicalRole(string role) =>
+        string.Equals(role, "admin", StringComparison.OrdinalIgnoreCase) ? UserRoles.Admin : role;
 }

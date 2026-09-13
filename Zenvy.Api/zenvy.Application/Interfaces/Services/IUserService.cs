@@ -6,6 +6,10 @@ public interface IUserService
 {
     Task<UserDto> RegisterAsync(RegisterUserDto dto);
 
+    Task<UserDto> RegisterManagerRequestAsync(ManagerSignupDto dto);
+
+    Task<bool> SetActiveAsync(Guid id, bool active);
+
     Task<UserDto?> UpdateAsync(Guid id,
                               UpdateUserDto dto);
 

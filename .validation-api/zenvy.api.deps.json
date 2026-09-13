@@ -437,7 +437,7 @@
           "zenvy.shared": "1.0.0"
         },
         "runtime": {
-          "zenvy.Infrastructure.dll": {
+          "zenvy.infrastructure.dll": {
             "fileVersion": "0.0.0.0"
           }
         }

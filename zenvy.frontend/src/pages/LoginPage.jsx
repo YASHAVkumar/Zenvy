@@ -8,15 +8,25 @@ const LoginPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error } = useSelector((state) => state.auth);
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ email: '', password: '', fullName: '', phone: '' });
+  const [signup, setSignup] = useState(false);
+  const [success, setSuccess] = useState('');
   const [requestError, setRequestError] = useState('');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setRequestError('');
+    setSuccess('');
     dispatch({ type: 'auth/setLoading', payload: true });
     try {
-      const { data } = await api.post('/api/v1/auth/login', form);
+      if (signup) {
+        const { data } = await api.post('/api/v1/auth/signup/manager', form);
+        setSuccess(data?.message || 'Request submitted for admin approval.');
+        setSignup(false);
+        setForm({ email: '', password: '', fullName: '', phone: '' });
+        return;
+      }
+      const { data } = await api.post('/api/v1/auth/login', { email: form.email, password: form.password });
       if (!data?.token) throw new Error(data?.message || 'Login failed');
       const user = {
         userId: data.userId,
@@ -41,13 +51,17 @@ const LoginPage = () => {
       <section className="login-panel">
         <div className="brand-mark">Z</div>
         <p className="eyebrow">Business operations</p>
-        <h1>Welcome back.</h1>
-        <p className="muted">Sign in to see what is moving across your business.</p>
+        <h1>{signup ? 'Join the team.' : 'Welcome back.'}</h1>
+        <p className="muted">{signup ? 'Request a Manager account. An Admin must approve it before you can sign in.' : 'Sign in to see what is moving across your business.'}</p>
         <form onSubmit={handleSubmit} className="login-form">
+          {signup && <label>Full name<input value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} required /></label>}
           <label>Email<input type="email" autoComplete="email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} required /></label>
+          {signup && <label>Phone<input value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} /></label>}
           <label>Password<input type="password" autoComplete="current-password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} required /></label>
           {(requestError || error) && <p className="form-error">{requestError || error}</p>}
-          <button className="primary-button" type="submit" disabled={loading}>{loading ? 'Signing in...' : 'Sign in'}</button>
+          {success && <p className="form-success">{success}</p>}
+          <button className="primary-button" type="submit" disabled={loading}>{loading ? 'Working...' : signup ? 'Request Manager access' : 'Sign in'}</button>
+          <button className="secondary-button" type="button" onClick={() => { setSignup(!signup); setRequestError(''); setSuccess(''); }}>{signup ? 'Back to sign in' : 'Manager signup'}</button>
         </form>
       </section>
       <aside className="login-aside">

@@ -34,7 +34,31 @@ public class UserService(IUserRepository repository, IUnitOfWork unitOfWork) : I
             FullName = user.FullName,
             Email = user.Email,
             Role = dto.Role.Name
+            ,IsActive = user.IsActive
         };
+    }
+
+    public Task<UserDto> RegisterManagerRequestAsync(ManagerSignupDto dto) => RegisterPendingAsync(dto);
+
+    private async Task<UserDto> RegisterPendingAsync(ManagerSignupDto dto)
+    {
+        User user = new()
+        {
+            UserId = Guid.NewGuid().ToString(), FullName = dto.FullName, Email = dto.Email, Phone = dto.Phone,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password), RoleId = 2, Role = UserRoles.Manager,
+            IsActive = false, CreatedAt = DateTime.Now
+        };
+        await repository.AddAsync(user); await unitOfWork.SaveChangesAsync();
+        return new UserDto { UserId = user.UserId, FullName = user.FullName, Email = user.Email, Role = user.Role, IsActive = false };
+    }
+
+    public async Task<bool> SetActiveAsync(Guid id, bool active)
+    {
+        var user = await repository.GetByIdAsync(id);
+        if (user is null) return false;
+        user.IsActive = active;
+        await repository.UpdateAsync(user); await unitOfWork.SaveChangesAsync();
+        return true;
     }
 
     public async Task<List<UserDto>> GetUsersAsync()
@@ -47,6 +71,7 @@ public class UserService(IUserRepository repository, IUnitOfWork unitOfWork) : I
             FullName = x.FullName,
             Email = x.Email,
             Role = x.Role
+            ,IsActive = x.IsActive
         })];
     }
 
@@ -69,6 +94,7 @@ public class UserService(IUserRepository repository, IUnitOfWork unitOfWork) : I
             FullName = user.FullName,
             Email = user.Email,
             Role = user.Role
+            ,IsActive = user.IsActive
         };
     }
 
@@ -96,6 +122,7 @@ public class UserService(IUserRepository repository, IUnitOfWork unitOfWork) : I
             FullName = user.FullName,
             Email = user.Email,
             Role = user.Role
+            ,IsActive = user.IsActive
         };
     }
 }

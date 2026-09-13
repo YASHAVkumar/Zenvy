@@ -5,7 +5,7 @@ using zenvy.application.Interfaces.Repositories;
 using zenvy.application.Interfaces.Services;
 
 namespace zenvy.api.Controller;
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,admin")]
 [Route("api/v{version:apiVersion}/users")]
 [ApiController]
 public class UserController(IUserService userService) : ControllerBase
@@ -45,4 +45,13 @@ public class UserController(IUserService userService) : ControllerBase
         await userService.DeleteAsync(userId);
         return Ok();
     }
+
+    [HttpPatch("{id}/approval")]
+    public async Task<IActionResult> SetApproval(string id, [FromBody] ApprovalRequest request)
+    {
+        if (!Guid.TryParse(id, out var userId)) return BadRequest("id must be a valid GUID.");
+        return await userService.SetActiveAsync(userId, request.Approved) ? Ok(new { request.Approved }) : NotFound();
+    }
 }
+
+public sealed class ApprovalRequest { public bool Approved { get; set; } }

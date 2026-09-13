@@ -49,7 +49,7 @@ public class AuthService : IAuthService
             return new LoginResponse
             {
                 Success = false,
-                Message = "User Inactive"
+                Message = "Your manager account is waiting for admin approval."
             };
         }
 
