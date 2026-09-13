@@ -57,7 +57,6 @@ public class DashboardController(IDashboardService service) : ControllerBase
     /// Get Investor Dashboard - Investment and profit tracking
     /// </summary>
     [HttpGet("investor/{investorId:int}")]
-    [AllowAnonymous]
     public async Task<IActionResult> GetInvestorDashboard(int investorId)
     {
         var response = await service.GetInvestorDashboardAsync(investorId);

@@ -1,0 +1,12 @@
+import React, { useEffect, useState } from 'react';
+import { PackageSearch, Search, RefreshCw } from 'lucide-react';
+import api from '../lib/api';
+
+const ProductsPage = () => {
+  const [products, setProducts] = useState([]); const [search, setSearch] = useState(''); const [loading, setLoading] = useState(true); const [error, setError] = useState('');
+  const loadProducts = async (term = '') => { setLoading(true); setError(''); try { const response = await api.get('/api/v1/products', { params: { pageNumber: 1, pageSize: 50, search: term || undefined } }); const payload = response.data; setProducts(Array.isArray(payload) ? payload : payload?.items || payload?.data || []); } catch (requestError) { setError(requestError.message); } finally { setLoading(false); } };
+  useEffect(() => { loadProducts(); }, []);
+  const submitSearch = (event) => { event.preventDefault(); loadProducts(search); };
+  return <div className="products-page"><div className="page-heading"><div><p className="eyebrow">Catalog / inventory foundation</p><h2>Products</h2><p className="muted">Keep the catalog tidy so every order starts from the right place.</p></div><button className="secondary-button" onClick={() => loadProducts(search)}><RefreshCw size={16} />Refresh</button></div><form className="search-bar" onSubmit={submitSearch}><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search product name or code" /><button type="submit" className="primary-button compact">Search</button></form>{error && <div className="notice error">{error}</div>}{loading ? <div className="loading-state">Loading products...</div> : products.length ? <div className="table-wrap"><table><thead><tr><th>Product</th><th>Category</th><th>Brand</th><th>Status</th><th>Created</th></tr></thead><tbody>{products.map((product) => <tr key={product.productMasterId}><td><strong>{product.productName}</strong><small>{product.description || 'No description'}</small></td><td>{product.categoryName || '—'}</td><td>{product.brandName || '—'}</td><td><span className={product.isActive ? 'tag success' : 'tag'}>{product.isActive ? 'Active' : 'Inactive'}</span></td><td>{product.createdAt ? new Date(product.createdAt).toLocaleDateString('en-IN') : '—'}</td></tr>)}</tbody></table></div> : <div className="empty-state large"><PackageSearch size={34} /><h3>No products found</h3><p>Try a different search or add products through the API.</p></div>}</div>;
+};
+export default ProductsPage;

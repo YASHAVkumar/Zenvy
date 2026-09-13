@@ -24,11 +24,33 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var provider = configuration["DataProvider"];
+        var provider = configuration["DataProvider"] ?? "ADO";
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var jwtKey = configuration["Jwt:Key"];
+        var jwtIssuer = configuration["Jwt:Issuer"];
+        var jwtAudience = configuration["Jwt:Audience"];
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("ConnectionStrings:DefaultConnection must be configured.");
+        if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
+            throw new InvalidOperationException("Jwt:Key must be configured with at least 32 characters.");
+        if (string.IsNullOrWhiteSpace(jwtIssuer) || string.IsNullOrWhiteSpace(jwtAudience))
+            throw new InvalidOperationException("Jwt:Issuer and Jwt:Audience must be configured.");
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtService, JwtService>();
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
         {
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                        context.Token = accessToken;
+                    return Task.CompletedTask;
+                }
+            };
             options.TokenValidationParameters =
                 new TokenValidationParameters
                 {
@@ -37,16 +59,15 @@ public static class DependencyInjection
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
 
-                    ValidIssuer =
-                        configuration["Jwt:Issuer"],
+                    ValidIssuer = jwtIssuer,
 
                     ValidAudience =
-                        configuration["Jwt:Audience"],
+                        jwtAudience,
 
                     IssuerSigningKey =
                         new SymmetricSecurityKey(
                             Encoding.UTF8.GetBytes(
-                                configuration["Jwt:Key"]!))
+                                jwtKey))
                 };
         });
 
@@ -83,12 +104,7 @@ public static class DependencyInjection
         }
         else
         {
-            // EF Core natively registers its context and connections as Scoped per request out of the box
-            services.AddDbContext<AppDbContext>(opt =>
-                opt.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
-
-            services.AddScoped<IUserRepository, EfUserRepositories>();
-            services.AddScoped<IUnitOfWork, EfUnitOfWork>();
+            throw new InvalidOperationException($"Unsupported DataProvider '{provider}'. Configure DataProvider as 'ADO'.");
         }
 
         return services;

@@ -63,6 +63,7 @@ public class ExpenseRepository(IConfiguration configuration) : IExpenseRepositor
         await connection.OpenAsync();
         await using var command = FinanceSql.Command("usp_CreateExpense", connection);
         command.Parameters.AddWithValue("@ExpenseTypeId", request.ExpenseTypeId);
+        command.Parameters.AddWithValue("@PoId", request.POId);
         
         command.Parameters.AddWithValue("@Amount", request.Amount);
         command.Parameters.AddNullable("@Description", request.Description);

@@ -19,6 +19,7 @@ public class UserService(IUserRepository repository, IUnitOfWork unitOfWork) : I
             Phone = dto.Phone,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             RoleId = dto.Role.RoleId,
+            Role = dto.Role.Name,
             IsActive = true,
             CreatedAt = DateTime.Now
         };
@@ -56,9 +57,11 @@ public class UserService(IUserRepository repository, IUnitOfWork unitOfWork) : I
         await unitOfWork.SaveChangesAsync();
     }
 
-    public async Task<UserDto> GetByIdAsync(Guid id)
+    public async Task<UserDto?> GetByIdAsync(Guid id)
     {
         var user = await repository.GetByIdAsync(id);
+
+        if (user is null) return null;
 
         return new UserDto
         {
@@ -69,15 +72,19 @@ public class UserService(IUserRepository repository, IUnitOfWork unitOfWork) : I
         };
     }
 
-    public async Task<UserDto> UpdateAsync(
+    public async Task<UserDto?> UpdateAsync(
         Guid id,
         UpdateUserDto dto)
     {
         var user =
             await repository.GetByIdAsync(id);
 
+        if (user is null) return null;
+
         user.FullName = dto.FullName;
         user.Phone = dto.Phone;
+        user.RoleId = dto.Role.RoleId;
+        user.Role = dto.Role.Name;
 
         await repository.UpdateAsync(user);
 

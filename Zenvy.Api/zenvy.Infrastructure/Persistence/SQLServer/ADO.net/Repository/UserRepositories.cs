@@ -35,10 +35,9 @@ namespace zenvy.infrastructure.Persistence.SqlServer.ADO.net.Repository
                 connection.Open();
                 command.ExecuteNonQuery();
             }
-            catch(Exception ex)
+            catch
             {
-                // Log the exception (not implemented here)
-                Console.WriteLine($"Error adding user: {ex.Message}");
+                throw;
             }
             return Task.CompletedTask;
         }
@@ -54,12 +53,12 @@ namespace zenvy.infrastructure.Persistence.SqlServer.ADO.net.Repository
                 command.Parameters.AddWithValue("@UserId", id.ToString());
 
                 connection.Open();
-                command.ExecuteNonQuery();
+                if (command.ExecuteNonQuery() != 1)
+                    throw new KeyNotFoundException("The user was not found.");
             }
-            catch(Exception ex)
+            catch
             {
-                // Log the exception (not implemented here)
-                Console.WriteLine($"Error deleting user: {ex.Message}");
+                throw;
             }
             return Task.CompletedTask;
         }
@@ -94,11 +93,9 @@ namespace zenvy.infrastructure.Persistence.SqlServer.ADO.net.Repository
                 }
                 return Task.FromResult(users);
             }
-            catch(Exception ex)
+            catch
             {
-                // Log the exception (not implemented here)
-                Console.WriteLine($"Error fetching users: {ex.Message}");
-                return Task.FromResult(new List<User>());
+                throw;
             }
         }
 
@@ -132,10 +129,9 @@ namespace zenvy.infrastructure.Persistence.SqlServer.ADO.net.Repository
                     }
                 }
             }
-            catch(Exception ex)
+            catch
             {
-                // Log the exception (not implemented here)
-                Console.WriteLine($"Error fetching user by email: {ex.Message}");
+                throw;
             }
             return Task.FromResult<User?>(null);
         }
@@ -170,10 +166,9 @@ namespace zenvy.infrastructure.Persistence.SqlServer.ADO.net.Repository
                     }
                 }
             }
-            catch(Exception ex)
+            catch
             {
-                // Log the exception (not implemented here)
-                Console.WriteLine($"Error fetching user by ID: {ex.Message}");
+                throw;
             }
             return Task.FromResult<User?>(null);
         }
@@ -195,12 +190,12 @@ namespace zenvy.infrastructure.Persistence.SqlServer.ADO.net.Repository
                 command.Parameters.AddWithValue("@IsActive", user.IsActive);
 
                 connection.Open();
-                command.ExecuteNonQuery();
+                if (command.ExecuteNonQuery() != 1)
+                    throw new KeyNotFoundException("The user was not found.");
             }
-            catch(Exception ex)
+            catch
             {
-                // Log the exception (not implemented here)
-                Console.WriteLine($"Error updating user: {ex.Message}");
+                throw;
             }
             return Task.CompletedTask;
         }
@@ -216,14 +211,13 @@ namespace zenvy.infrastructure.Persistence.SqlServer.ADO.net.Repository
                 command.Parameters.AddWithValue("@PasswordHash", newPasswordHash);
 
                 connection.Open();
-                command.ExecuteNonQuery();
+                var affectedRows = command.ExecuteNonQuery();
+                return Task.FromResult(affectedRows == 1);
             }
-            catch(Exception ex)
+            catch
             {
-                // Log the exception (not implemented here)
-                Console.WriteLine($"Error changing password: {ex.Message}");
+                throw;
             }
-            return Task.FromResult(true);
         }
     }
 }

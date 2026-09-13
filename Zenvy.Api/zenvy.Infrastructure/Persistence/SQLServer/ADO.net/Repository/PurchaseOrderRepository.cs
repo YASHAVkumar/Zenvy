@@ -40,7 +40,9 @@ public class PurchaseOrderRepository(IConfiguration configuration) : IPurchaseOr
             expense.ExpenseDate);
         }
 
-        command.Parameters.AddWithValue("@Expenses", expensesTable);
+        var expensesParameter = command.Parameters.Add("@Expenses", SqlDbType.Structured);
+        expensesParameter.TypeName = "dbo.ExpensesType";
+        expensesParameter.Value = expensesTable;
 
         return Convert.ToInt64(await command.ExecuteScalarAsync());
     }

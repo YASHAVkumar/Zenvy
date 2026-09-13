@@ -15,6 +15,8 @@ public class UserRoles
 
     public const string Manager = "Manager";
 
+    public const string TeamLead = "TeamLead";
+
     public const string InventoryManager =
         "InventoryManager";
 

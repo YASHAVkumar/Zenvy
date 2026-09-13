@@ -10,12 +10,13 @@ namespace zenvy.api.Controller;
 [ApiController]
 public class InventoryController(IInventoryService inventoryService) : ControllerBase
 {
-    // [HttpPost]
-    // public async Task<IActionResult> CreateInventory([FromBody] InventoryRequest request)
-    // {
-    //     var inventoryId = await inventoryService.CreateInventoryAsync(request);
-    //     return Ok(new { InventoryId = inventoryId });
-    // }
+    [Authorize(Roles = "Admin,Manager,InventoryManager,TeamLead")]
+    [HttpPost]
+    public async Task<IActionResult> CreateInventory([FromBody] InventoryRequest request)
+    {
+        var inventoryId = await inventoryService.CreateInventoryAsync(request);
+        return Ok(new { InventoryId = inventoryId });
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetInventory()
@@ -32,6 +33,7 @@ public class InventoryController(IInventoryService inventoryService) : Controlle
         return Ok(response);
     }
 
+    [Authorize(Roles = "Admin,Manager,InventoryManager")]
     [HttpPut("{inventoryId:int}")]
     public async Task<IActionResult> UpdateInventory(int inventoryId, [FromBody] InventoryRequest request)
     {
@@ -39,6 +41,7 @@ public class InventoryController(IInventoryService inventoryService) : Controlle
         return Ok(new { Success = success });
     }
 
+    [Authorize(Roles = "Admin,Manager,InventoryManager")]
     [HttpPost("adjustment")]
     public async Task<IActionResult> AdjustInventory([FromBody] InventoryAdjustmentRequest request)
     {
@@ -46,6 +49,7 @@ public class InventoryController(IInventoryService inventoryService) : Controlle
         return Ok(new { Success = success });
     }
 
+    [Authorize(Roles = "Admin,Manager,InventoryManager")]
     [HttpPost("damage")]
     public async Task<IActionResult> DamageInventory([FromBody] InventoryDamageRequest request)
     {
@@ -53,6 +57,7 @@ public class InventoryController(IInventoryService inventoryService) : Controlle
         return Ok(new { Success = success });
     }
 
+    [Authorize(Roles = "Admin,Manager,InventoryManager")]
     [HttpPost("transfer")]
     public async Task<IActionResult> TransferInventory([FromBody] InventoryTransferRequest request)
     {

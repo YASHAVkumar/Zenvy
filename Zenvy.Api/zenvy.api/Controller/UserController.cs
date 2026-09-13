@@ -1,10 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualBasic;
 using zenvy.application.DTOs.Users;
 using zenvy.application.Interfaces.Repositories;
 using zenvy.application.Interfaces.Services;
 
 namespace zenvy.api.Controller;
+[Authorize(Roles = "Admin")]
 [Route("api/v{version:apiVersion}/users")]
 [ApiController]
 public class UserController(IUserService userService) : ControllerBase
@@ -16,8 +17,10 @@ public class UserController(IUserService userService) : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetUserById(string id) { 
-       var user = await userService.GetByIdAsync(Guid.Parse(id));
+     public async Task<IActionResult> GetUserById(string id) {
+         if (!Guid.TryParse(id, out var userId)) return BadRequest("id must be a valid GUID.");
+         var user = await userService.GetByIdAsync(userId);
+         if (user is null) return NotFound();
         return Ok(user);
     }
 
@@ -30,13 +33,16 @@ public class UserController(IUserService userService) : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserDto dto)
     {
-        var user = await userService.UpdateAsync(Guid.Parse(id), dto);
+        if (!Guid.TryParse(id, out var userId)) return BadRequest("id must be a valid GUID.");
+        var user = await userService.UpdateAsync(userId, dto);
+        if (user is null) return NotFound();
         return Ok(user);
     }
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteUser(string id)
     {
-        await userService.DeleteAsync(Guid.Parse(id));
+        if (!Guid.TryParse(id, out var userId)) return BadRequest("id must be a valid GUID.");
+        await userService.DeleteAsync(userId);
         return Ok();
     }
 }

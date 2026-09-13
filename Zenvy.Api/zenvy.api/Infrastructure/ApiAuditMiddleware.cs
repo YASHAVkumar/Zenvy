@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Security.Claims;
 using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.SignalR;
+using zenvy.api.Hubs;
 using zenvy.shared.Reponses;
 
 namespace zenvy.api.Infrastructure;
@@ -8,7 +10,8 @@ namespace zenvy.api.Infrastructure;
 public sealed class ApiAuditMiddleware(
     RequestDelegate next,
     IConfiguration configuration,
-    ILogger<ApiAuditMiddleware> logger)
+    ILogger<ApiAuditMiddleware> logger,
+    IHubContext<NotificationHub> hubContext)
 {
     public async Task InvokeAsync(HttpContext context)
     {
@@ -18,6 +21,34 @@ public sealed class ApiAuditMiddleware(
         try
         {
             await next(context);
+            if (context.Response.StatusCode is >= 200 and < 400 &&
+                (HttpMethods.IsPost(context.Request.Method) || HttpMethods.IsPut(context.Request.Method) || HttpMethods.IsPatch(context.Request.Method) || HttpMethods.IsDelete(context.Request.Method)))
+            {
+                try
+                {
+                    await hubContext.Clients.All.SendAsync("ResourceChanged", new
+                    {
+                        method = context.Request.Method,
+                        path = context.Request.Path.Value,
+                        statusCode = context.Response.StatusCode,
+                        traceId = context.TraceIdentifier
+                    });
+                    if (context.Request.Path.StartsWithSegments("/api/v1/inventory"))
+                    {
+                        await hubContext.Clients.All.SendAsync("InventoryChanged", new
+                        {
+                            method = context.Request.Method,
+                            path = context.Request.Path.Value,
+                            actor = context.User.Identity?.Name ?? "system",
+                            occurredAt = DateTimeOffset.UtcNow
+                        });
+                    }
+                }
+                catch (Exception signalRException)
+                {
+                    logger.LogWarning(signalRException, "Could not publish resource change for {Path}", context.Request.Path);
+                }
+            }
         }
         catch (Exception ex)
         {

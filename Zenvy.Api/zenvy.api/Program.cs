@@ -2,8 +2,10 @@ using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi;
+using Microsoft.AspNetCore.SignalR;
 using zenvy.application;
 using zenvy.api.Infrastructure;
+using zenvy.api.Hubs;
 using zenvy.infrastructure;
 using zenvy.shared.Reponses;
 
@@ -28,6 +30,18 @@ builder.Services.AddControllers(options => options.Filters.Add<ApiResponseFilter
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
+builder.Services.AddSignalR();
+
+builder.Services.AddCors(options =>
+{
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+        ?? ["http://localhost:5173", "http://127.0.0.1:5173"];
+    options.AddPolicy("Frontend", policy => policy
+        .WithOrigins(allowedOrigins)
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials());
+});
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -120,9 +134,12 @@ app.UseStatusCodePages(async statusContext =>
 
 app.UseMiddleware<ApiAuditMiddleware>();
 
+app.UseCors("Frontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.Run();

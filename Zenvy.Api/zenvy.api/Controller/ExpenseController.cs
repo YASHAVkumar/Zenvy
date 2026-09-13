@@ -22,12 +22,14 @@ public class ExpenseTypeController(IExpenseService service) : ControllerBase
 [Authorize, ApiController, Route("api/v{version:apiVersion}/expenses")]
 public class ExpenseController(IExpenseService service) : ControllerBase
 {
-    // [HttpPost]
-    // public async Task<IActionResult> Create(ExpenseRequest request)
-    // {
-    //     if (request.Amount <= 0) return BadRequest("Amount must be greater than zero.");
-    //     return Ok(new { ExpenseId = await service.CreateExpenseAsync(request) });
-    // }
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] ExpenseRequest request)
+    {
+        if (request.Amount <= 0) return BadRequest("Amount must be greater than zero.");
+        if (request.POId <= 0) return BadRequest("POId must be greater than zero.");
+        if (!Guid.TryParse(request.CreatedBy, out _)) return BadRequest("CreatedBy must be a valid GUID.");
+        return Ok(new { ExpenseId = await service.CreateExpenseAsync(request) });
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate, [FromQuery] int? expenseTypeId)
