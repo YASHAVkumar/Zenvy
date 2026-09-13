@@ -11,6 +11,7 @@ namespace zenvy.infrastructure.Service;
 public class JwtService(IConfiguration configuration) : IJwtService
 {
     private readonly IConfiguration _configuration = configuration;
+    public int AccessTokenLifetimeSeconds => 15 * 60;
 
     public string GenerateToken(User user)
     {
@@ -44,7 +45,7 @@ public class JwtService(IConfiguration configuration) : IJwtService
 
         var token =
             new JwtSecurityToken(
-                expires: DateTime.Now.AddDays(7),
+                expires: DateTime.UtcNow.AddSeconds(AccessTokenLifetimeSeconds),
                 issuer: _configuration?["Jwt:Issuer"],
                 audience: _configuration?["Jwt:Audience"],
                 claims: claims,

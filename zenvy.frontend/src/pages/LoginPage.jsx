@@ -35,6 +35,7 @@ const LoginPage = () => {
         role: data.role,
       };
       localStorage.setItem('zenvy_token', data.token);
+      localStorage.setItem('zenvy_refresh_token', data.refreshToken);
       localStorage.setItem('zenvy_user', JSON.stringify(user));
       dispatch(setAuth({ token: data.token, user }));
       navigate('/dashboard', { replace: true });

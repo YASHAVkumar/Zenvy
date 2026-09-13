@@ -219,5 +219,45 @@ namespace zenvy.infrastructure.Persistence.SqlServer.ADO.net.Repository
                 throw;
             }
         }
+
+        public Task AddRefreshTokenAsync(RefreshToken refreshToken)
+        {
+            using var connection = new SqlConnection(sqlConnectionString);
+            using var command = connection.CreateCommand();
+            command.CommandText = "INSERT INTO RefreshTokens (TokenHash, UserId, ExpiresAt) VALUES (@TokenHash, @UserId, @ExpiresAt)";
+            command.Parameters.AddWithValue("@TokenHash", refreshToken.TokenHash);
+            command.Parameters.AddWithValue("@UserId", refreshToken.UserId);
+            command.Parameters.AddWithValue("@ExpiresAt", refreshToken.ExpiresAt);
+            connection.Open(); command.ExecuteNonQuery();
+            return Task.CompletedTask;
+        }
+
+        public Task<RefreshToken?> GetRefreshTokenAsync(string tokenHash)
+        {
+            using var connection = new SqlConnection(sqlConnectionString);
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT TokenHash, UserId, ExpiresAt, RevokedAt FROM RefreshTokens WHERE TokenHash = @TokenHash";
+            command.Parameters.AddWithValue("@TokenHash", tokenHash);
+            connection.Open();
+            using var reader = command.ExecuteReader();
+            if (!reader.Read()) return Task.FromResult<RefreshToken?>(null);
+            return Task.FromResult<RefreshToken?>(new RefreshToken
+            {
+                TokenHash = reader["TokenHash"].ToString()!, UserId = reader["UserId"].ToString()!,
+                ExpiresAt = Convert.ToDateTime(reader["ExpiresAt"]),
+                RevokedAt = reader["RevokedAt"] == DBNull.Value ? null : Convert.ToDateTime(reader["RevokedAt"])
+            });
+        }
+
+        public Task RevokeRefreshTokenAsync(string tokenHash, DateTime revokedAt)
+        {
+            using var connection = new SqlConnection(sqlConnectionString);
+            using var command = connection.CreateCommand();
+            command.CommandText = "UPDATE RefreshTokens SET RevokedAt = @RevokedAt WHERE TokenHash = @TokenHash AND RevokedAt IS NULL";
+            command.Parameters.AddWithValue("@TokenHash", tokenHash);
+            command.Parameters.AddWithValue("@RevokedAt", revokedAt);
+            connection.Open(); command.ExecuteNonQuery();
+            return Task.CompletedTask;
+        }
     }
 }

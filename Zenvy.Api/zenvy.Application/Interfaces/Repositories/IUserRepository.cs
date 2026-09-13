@@ -19,5 +19,8 @@ namespace zenvy.application.Interfaces.Repositories
 
         Task DeleteAsync(Guid id);
         Task<bool> ChaangePasswordAsync(Guid userId, string newPasswordHash);
+        Task AddRefreshTokenAsync(RefreshToken refreshToken);
+        Task<RefreshToken?> GetRefreshTokenAsync(string tokenHash);
+        Task RevokeRefreshTokenAsync(string tokenHash, DateTime revokedAt);
     }
 }

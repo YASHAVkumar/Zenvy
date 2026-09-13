@@ -26,6 +26,7 @@ const AppLayout = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('zenvy_token');
+    localStorage.removeItem('zenvy_refresh_token');
     localStorage.removeItem('zenvy_user');
     dispatch(logout());
     navigate('/login', { replace: true });

@@ -28,6 +28,20 @@ public class AuthController(IAuthService authService, IUserService userService) 
         return Ok(response);
     }
 
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest request)
+    {
+        var response = await authService.RefreshAsync(request.RefreshToken);
+        return response is null ? Unauthorized(new { message = "Refresh token is invalid or expired." }) : Ok(response);
+    }
+
+    [HttpPost("revoke")]
+    public async Task<IActionResult> Revoke([FromBody] RefreshTokenRequest request)
+    {
+        await authService.RevokeRefreshTokenAsync(request.RefreshToken);
+        return Ok(new { message = "Refresh token revoked." });
+    }
+
     [HttpPost("signup/manager")]
     public async Task<IActionResult> SignupManager([FromBody] ManagerSignupDto request)
     {
@@ -67,4 +81,9 @@ public class AuthController(IAuthService authService, IUserService userService) 
             Message = success ? "Password changed successfully" : "Failed to change password"
         });
     }
+}
+
+public sealed class RefreshTokenRequest
+{
+    public string RefreshToken { get; set; } = string.Empty;
 }
