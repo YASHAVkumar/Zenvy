@@ -108,7 +108,7 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/swagger/v2/swagger.json", "Zenvy API v2");
 
         options.RoutePrefix = "swagger";
-        options.EnablePersistAuthorization();
+        //options.EnablePersistAuthorization();
     });
 }
 
@@ -141,5 +141,5 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
-
+app.MapGet("/",()=>"Hello World");
 app.Run();

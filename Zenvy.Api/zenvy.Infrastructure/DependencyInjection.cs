@@ -97,6 +97,7 @@ public static class DependencyInjection
             services.AddScoped<IExpenseRepository, ExpenseRepository>();
             services.AddScoped<IProfitRepository, ProfitRepository>();
             services.AddScoped<IEmployeeCommissionRepository, EmployeeCommissionRepository>();
+            services.AddScoped<IEmployeeCompensationRepository, EmployeeCompensationRepository>();
             services.AddScoped<IInvestorRepository, InvestorRepository>();
             services.AddScoped<IDashboardRepository, DashboardRepository>();
             // Ensure your Unit of Work also accepts the string if it opens transactions

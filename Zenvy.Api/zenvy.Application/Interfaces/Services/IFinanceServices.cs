@@ -22,6 +22,11 @@ public interface IEmployeeCommissionService
     Task<IEnumerable<EmployeeCommissionResponse>> GetAllAsync(string? userId, DateTime? fromDate, DateTime? toDate);
 }
 
+public interface IEmployeeCompensationService
+{
+    Task<IEnumerable<EmployeeCompensationResponse>> GetReportAsync(DateTime fromDate, DateTime toDate, int? employeeId);
+}
+
 public interface IInvestorService
 {
     Task<int> CreateAsync(InvestorRequest request);

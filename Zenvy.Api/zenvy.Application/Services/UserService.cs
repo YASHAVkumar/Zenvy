@@ -3,6 +3,7 @@ using zenvy.application.Interfaces;
 using zenvy.application.Interfaces.Repositories;
 using zenvy.application.Interfaces.Services;
 using zenvy.domain.Entities;
+using zenvy.Domain.Enums;
 
 namespace zenvy.application.Service;
 
@@ -11,6 +12,7 @@ public class UserService(IUserRepository repository, IUnitOfWork unitOfWork) : I
     public async Task<UserDto> RegisterAsync(
         RegisterUserDto dto)
     {
+        var role = ValidateRole(dto.Role);
         User user = new()
         {
             UserId = Guid.NewGuid().ToString(),
@@ -18,8 +20,8 @@ public class UserService(IUserRepository repository, IUnitOfWork unitOfWork) : I
             Email = dto.Email,
             Phone = dto.Phone,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            RoleId = dto.Role.RoleId,
-            Role = dto.Role.Name,
+            RoleId = (int)role,
+            Role = role.ToString(),
             IsActive = true,
             CreatedAt = DateTime.Now
         };
@@ -33,7 +35,7 @@ public class UserService(IUserRepository repository, IUnitOfWork unitOfWork) : I
             UserId = user.UserId,
             FullName = user.FullName,
             Email = user.Email,
-            Role = dto.Role.Name
+            Role = role.ToString()
             ,IsActive = user.IsActive
         };
     }
@@ -45,7 +47,7 @@ public class UserService(IUserRepository repository, IUnitOfWork unitOfWork) : I
         User user = new()
         {
             UserId = Guid.NewGuid().ToString(), FullName = dto.FullName, Email = dto.Email, Phone = dto.Phone,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password), RoleId = 2, Role = UserRoles.Manager,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password), RoleId = 2, Role = UserRoles.Manager.ToString(),
             IsActive = false, CreatedAt = DateTime.Now
         };
         await repository.AddAsync(user); await unitOfWork.SaveChangesAsync();
@@ -109,8 +111,9 @@ public class UserService(IUserRepository repository, IUnitOfWork unitOfWork) : I
 
         user.FullName = dto.FullName;
         user.Phone = dto.Phone;
-        user.RoleId = dto.Role.RoleId;
-        user.Role = dto.Role.Name;
+        var role = ValidateRole(dto.Role);
+        user.RoleId = (int)role;
+        user.Role = role.ToString();
 
         await repository.UpdateAsync(user);
 
@@ -124,5 +127,12 @@ public class UserService(IUserRepository repository, IUnitOfWork unitOfWork) : I
             Role = user.Role
             ,IsActive = user.IsActive
         };
+    }
+
+    private static UserRoles ValidateRole(Role role)
+    {
+        if (role is null || !Enum.TryParse<UserRoles>(role.Name?.Trim(), true, out var parsedRole) || (int)parsedRole != role.RoleId)
+            throw new ArgumentException("RoleId and role name must match a supported role.");
+        return parsedRole;
     }
 }

@@ -14,6 +14,9 @@ import WorkflowPage from '../pages/WorkflowPage';
 import WorkspacePage from '../pages/WorkspacePage';
 import AdminPage from '../pages/AdminPage';
 import ManualPage from '../pages/ManualPage';
+import CompensationPage from '../pages/CompensationPage';
+import ProfitDistributionPage from '../pages/ProfitDistributionPage';
+import { RoleRoute } from './RoleRoute';
 
 const router = createBrowserRouter([
   {
@@ -36,6 +39,8 @@ const router = createBrowserRouter([
           { path: 'workflow', element: <WorkflowPage /> },
           { path: 'workspace', element: <WorkspacePage /> },
           { path: 'finance', element: <FinancePage /> },
+          { path: 'compensation', element: <RoleRoute roles={['Admin', 'Manager', 'Accountant']}><CompensationPage /></RoleRoute> },
+          { path: 'profit-distribution', element: <RoleRoute roles={['Admin', 'Manager', 'Accountant']}><ProfitDistributionPage /></RoleRoute> },
           { path: 'products', element: <ProductsPage /> },
           { path: 'admin', element: <AdminPage /> },
           { path: 'manual', element: <ManualPage /> },

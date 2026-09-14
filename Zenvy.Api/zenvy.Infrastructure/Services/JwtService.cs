@@ -3,6 +3,7 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using zenvy.domain.Entities;
 using Microsoft.Extensions.Configuration;
+using zenvy.Domain.Enums;
 //using Microsoft.IdentityModel;
 using System.IdentityModel.Tokens.Jwt;
 using zenvy.application.Interfaces.Services;
@@ -57,6 +58,11 @@ public class JwtService(IConfiguration configuration) : IJwtService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    private static string CanonicalRole(string role) =>
-        string.Equals(role, "admin", StringComparison.OrdinalIgnoreCase) ? UserRoles.Admin : role;
+    private static string CanonicalRole(string role)
+    {
+        if (!Enum.TryParse<UserRoles>(role.Trim(), ignoreCase: true, out var parsedRole))
+            throw new InvalidOperationException($"Unsupported user role '{role}'.");
+
+        return parsedRole.ToString();
+    }
 }

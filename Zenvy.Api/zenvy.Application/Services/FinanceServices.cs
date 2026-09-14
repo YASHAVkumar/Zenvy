@@ -82,6 +82,12 @@ public class EmployeeCommissionService(IEmployeeCommissionRepository repository)
     public Task<IEnumerable<EmployeeCommissionResponse>> GetAllAsync(string? userId, DateTime? fromDate, DateTime? toDate) => repository.GetAllAsync(userId, fromDate, toDate);
 }
 
+public class EmployeeCompensationService(IEmployeeCompensationRepository repository) : IEmployeeCompensationService
+{
+    public Task<IEnumerable<EmployeeCompensationResponse>> GetReportAsync(DateTime fromDate, DateTime toDate, int? employeeId) =>
+        repository.GetReportAsync(fromDate, toDate, employeeId);
+}
+
 public class InvestorService(IInvestorRepository repository, IProfitService profitService) : IInvestorService
 {
     public Task<int> CreateAsync(InvestorRequest request) => repository.CreateAsync(request);

@@ -17,6 +17,28 @@ BEGIN
 END;
 GO
 
+CREATE OR ALTER PROCEDURE dbo.usp_GetEmployeeCompensationReport
+    @FromDate datetime2,
+    @ToDate datetime2,
+    @EmployeeId int = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    IF @FromDate > @ToDate THROW 50240, 'Invalid compensation period.', 1;
+    DECLARE @EndDate datetime2 = DATEADD(DAY, 1, CAST(@ToDate AS date));
+    SELECT e.EmployeeId, e.UserId, e.EmployeeName,
+           CAST(ISNULL(s.BaseSalary, 0) AS decimal(18,2)) AS BaseSalary,
+           CAST(ISNULL(c.CommissionAmount, 0) AS decimal(18,2)) AS CommissionAmount,
+           ISNULL(c.CommissionCount, 0) AS CommissionCount,
+           CAST(ISNULL(s.BaseSalary, 0) + ISNULL(c.CommissionAmount, 0) AS decimal(18,2)) AS TotalCompensation
+    FROM dbo.Employees e
+    OUTER APPLY (SELECT TOP (1) BaseSalary FROM dbo.Salary WHERE EmployeeId = e.EmployeeId AND IsActive = 1 ORDER BY SalaryId DESC) s
+    OUTER APPLY (SELECT SUM(ec.CommissionAmount) AS CommissionAmount, COUNT_BIG(*) AS CommissionCount FROM dbo.EmployeeCommissions ec WHERE ec.UserId = e.UserId AND ec.CreatedAt >= @FromDate AND ec.CreatedAt < @EndDate) c
+    WHERE @EmployeeId IS NULL OR e.EmployeeId = @EmployeeId
+    ORDER BY e.EmployeeName;
+END;
+GO
+
 CREATE OR ALTER PROCEDURE dbo.usp_GetExpenseTypes
 AS
 BEGIN
@@ -78,7 +100,7 @@ BEGIN
            CAST(SUM(pol.Qty * pol.UnitCost) / NULLIF(SUM(pol.Qty), 0) AS DECIMAL(18,4)) AS UnitCost
     FROM PurchaseOrderLines pol
     INNER JOIN PurchaseOrders po ON po.POId = pol.POId
-    WHERE po.OrderDate < @EndDate AND UPPER(po.Status) <> 'CANCELLED'
+    WHERE po.OrderDate >= @FromDate AND po.OrderDate < @EndDate AND UPPER(po.Status) <> 'CANCELLED'
     GROUP BY pol.VariantId;
 
     SELECT sol.VariantId, sol.Qty AS Quantity,

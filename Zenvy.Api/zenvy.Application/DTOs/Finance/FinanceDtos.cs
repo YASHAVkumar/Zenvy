@@ -114,3 +114,14 @@ public class ProfitDistributionResponse
     public DateTime? DistributedDate { get; set; }
     public string? Notes { get; set; }
 }
+
+public class EmployeeCompensationResponse
+{
+    public int EmployeeId { get; set; }
+    public string? UserId { get; set; }
+    public string EmployeeName { get; set; } = string.Empty;
+    public decimal BaseSalary { get; set; }
+    public decimal CommissionAmount { get; set; }
+    public long CommissionCount { get; set; }
+    public decimal TotalCompensation { get; set; }
+}

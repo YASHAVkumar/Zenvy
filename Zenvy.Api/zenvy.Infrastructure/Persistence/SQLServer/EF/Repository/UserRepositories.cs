@@ -8,6 +8,20 @@ namespace zenvy.infrastructure.Persistence.SqlServer.EF.Repository
 {
     internal class EfUserRepositories : IUserRepository
     {
+        public Task AddRefreshTokenAsync(RefreshToken refreshToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<RefreshToken?> GetRefreshTokenAsync(string tokenHash)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task RevokeRefreshTokenAsync(string tokenHash, DateTime revokedAt)
+        {
+            throw new NotImplementedException();
+        }
 
         Task IUserRepository.AddAsync(User user)
         {

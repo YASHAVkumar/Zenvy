@@ -22,6 +22,11 @@ public interface IEmployeeCommissionRepository
     Task<IEnumerable<EmployeeCommissionResponse>> GetAllAsync(string? userId, DateTime? fromDate, DateTime? toDate);
 }
 
+public interface IEmployeeCompensationRepository
+{
+    Task<IEnumerable<EmployeeCompensationResponse>> GetReportAsync(DateTime fromDate, DateTime toDate, int? employeeId);
+}
+
 public interface IInvestorRepository
 {
     Task<int> CreateAsync(InvestorRequest request);

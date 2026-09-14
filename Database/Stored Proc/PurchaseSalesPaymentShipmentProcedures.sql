@@ -1146,12 +1146,12 @@ BEGIN
     SELECT 
         (SELECT COUNT(*) FROM PurchaseOrders WHERE Status = 'PENDING') AS PendingPurchases,
         0 AS PendingGoodsReceipt,
-        ISNULL(SUM(il.Qty), 0) AS CurrentInventory,
+        CAST(ISNULL((SELECT SUM(AvailableQty) FROM Inventory), 0) AS DECIMAL(18,2)) AS CurrentInventory,
         (SELECT COUNT(*) FROM SalesOrders WHERE Status IN ('PENDING', 'PROCESSING')) AS PendingOrders,
         (SELECT COUNT(*) FROM SalesOrders WHERE Status = 'PACKED') AS PendingDispatch,
         (SELECT COUNT(*) FROM SalesReturns WHERE Status = 'REQUESTED') AS Returns,
         0 AS DamagedStock
-    FROM InventoryLedger il;
+    ;
 END;
 GO
 
@@ -1202,15 +1202,14 @@ BEGIN
     SELECT 
         e.EmployeeId,
         e.EmployeeName,
-        (SELECT COUNT(*) FROM Tasks WHERE AssignedTo = e.EmployeeId AND Status != 'COMPLETED') AS TasksAssigned,
-        (SELECT COUNT(*) FROM Tasks WHERE AssignedTo = e.EmployeeId AND Status = 'COMPLETED') AS TasksCompleted,
-        (SELECT COUNT(DISTINCT AttendanceDate) FROM Attendance WHERE EmployeeId = e.EmployeeId AND Status = 'PRESENT') AS AttendanceDays,
+        0 AS TasksAssigned,
+        0 AS TasksCompleted,
+        0 AS AttendanceDays,
         ISNULL(sal.BaseSalary, 0) AS Salary,
-        ISNULL(SUM(ec.CommissionAmount), 0) AS Commission,
+        0 AS Commission,
         0 AS PerformanceScore
     FROM Employees e
     LEFT JOIN Salary sal ON e.EmployeeId = sal.EmployeeId AND sal.IsActive = 1
-    LEFT JOIN EmployeeCommissions ec ON e.EmployeeId = ec.CommissionId
     WHERE @EmployeeId IS NULL OR e.EmployeeId = @EmployeeId
     GROUP BY e.EmployeeId, e.EmployeeName, sal.BaseSalary;
 END;

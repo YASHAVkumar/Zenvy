@@ -157,6 +157,34 @@ public class EmployeeCommissionRepository(IConfiguration configuration) : IEmplo
     }
 }
 
+public class EmployeeCompensationRepository(IConfiguration configuration) : IEmployeeCompensationRepository
+{
+    private readonly string connectionString = configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
+
+    public async Task<IEnumerable<EmployeeCompensationResponse>> GetReportAsync(DateTime fromDate, DateTime toDate, int? employeeId)
+    {
+        var result = new List<EmployeeCompensationResponse>();
+        await using var connection = new SqlConnection(connectionString);
+        await connection.OpenAsync();
+        await using var command = FinanceSql.Command("usp_GetEmployeeCompensationReport", connection);
+        command.Parameters.AddWithValue("@FromDate", fromDate);
+        command.Parameters.AddWithValue("@ToDate", toDate);
+        command.Parameters.AddNullable("@EmployeeId", employeeId);
+        await using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync()) result.Add(new EmployeeCompensationResponse
+        {
+            EmployeeId = reader.GetInt32(reader.GetOrdinal("EmployeeId")),
+            UserId = reader.IsDBNull(reader.GetOrdinal("UserId")) ? null : reader.GetString(reader.GetOrdinal("UserId")).Trim(),
+            EmployeeName = reader.IsDBNull(reader.GetOrdinal("EmployeeName")) ? string.Empty : reader.GetString(reader.GetOrdinal("EmployeeName")),
+            BaseSalary = reader.GetDecimal(reader.GetOrdinal("BaseSalary")),
+            CommissionAmount = reader.GetDecimal(reader.GetOrdinal("CommissionAmount")),
+            CommissionCount = reader.GetInt64(reader.GetOrdinal("CommissionCount")),
+            TotalCompensation = reader.GetDecimal(reader.GetOrdinal("TotalCompensation"))
+        });
+        return result;
+    }
+}
+
 public class InvestorRepository(IConfiguration configuration) : IInvestorRepository
 {
     private readonly string connectionString = configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
