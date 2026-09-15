@@ -4,7 +4,7 @@ using zenvy.application.DTOs.Products;
 using zenvy.application.Interfaces.Services;
 
 namespace zenvy.api.Controller;
-[Authorize]
+[Authorize(Roles = "Admin,Manager,InventoryManager,TeamLead")]
 [Route("api/v{version:apiVersion}/products")]
 [ApiController]
 public class ProductController(IProductService productService) : ControllerBase
@@ -14,6 +14,13 @@ public class ProductController(IProductService productService) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateProduct([FromBody] CreateProductRequest request)
     {
+        if (request is null) return BadRequest("Product request is required.");
+        if (string.IsNullOrWhiteSpace(request.ProductMaster.ProductName)) return BadRequest("ProductName is required.");
+        if (string.IsNullOrWhiteSpace(request.ProductMaster.ProductCode)) return BadRequest("ProductCode is required.");
+        if (request.ProductVariants == null || request.ProductVariants.Count == 0) return BadRequest("At least one product variant is required.");
+        if (request.ProductVariants.Any(v => string.IsNullOrWhiteSpace(v.SKU) || string.IsNullOrWhiteSpace(v.Color) || string.IsNullOrWhiteSpace(v.Size)))
+            return BadRequest("Each product variant must include SKU, Color and Size.");
+
         var response = await _productService.CreateProductAsync(request);
         return Ok(response);
     }

@@ -4,7 +4,7 @@ using zenvy.application.Interfaces.Services;
 
 namespace zenvy.api.Controller;
 
-[Authorize]
+[Authorize(Roles = "Admin,Manager,Accountant,TeamLead")]
 [Route("api/v{version:apiVersion}/dashboards")]
 [ApiController]
 public class DashboardController(IDashboardService service) : ControllerBase

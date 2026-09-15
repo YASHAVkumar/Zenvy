@@ -23,33 +23,34 @@ public class ProfitService(IProfitRepository repository) : IProfitService
             .ToDictionary(
                 group => group.Key,
                 group => group.Sum(x => x.Quantity) == 0
-                    ? 0
+                    ? 0m
                     : group.Sum(x => x.Quantity * x.UnitCost) / group.Sum(x => x.Quantity));
 
         var returnedQuantity = data.Returns
             .GroupBy(x => x.VariantId)
             .ToDictionary(group => group.Key, group => group.Sum(x => x.Quantity));
 
-        decimal investment = 0;
+        decimal investment = 0m;
         var uncostedQuantity = 0;
+
         foreach (var sale in data.Sales.GroupBy(x => x.VariantId))
         {
             var sold = sale.Sum(x => x.Quantity);
             var returned = returnedQuantity.GetValueOrDefault(sale.Key);
             var netQuantity = Math.Max(0, sold - returned);
-            if (purchaseCosts.TryGetValue(sale.Key, out var averageCost))
+            if (purchaseCosts.TryGetValue(sale.Key, out var averageCost) && averageCost > 0m)
                 investment += netQuantity * averageCost;
             else
                 uncostedQuantity += netQuantity;
         }
 
-        investment = decimal.Round(investment, 2, MidpointRounding.AwayFromZero);
         var grossSales = data.Sales.Sum(x => x.Revenue);
         var salesReturns = data.Returns.Sum(x => x.RefundAmount);
         var netSales = grossSales - salesReturns;
-        var grossProfit = netSales - investment;
         var expenses = data.Expenses.Sum(x => x.Amount);
         var commissions = data.Commissions.Sum(x => x.Amount);
+        var costOfGoodsSold = investment;
+        var grossProfit = netSales - costOfGoodsSold;
         var netProfit = grossProfit - expenses - commissions;
 
         return new ProfitSummaryResponse
@@ -59,15 +60,15 @@ public class ProfitService(IProfitRepository repository) : IProfitService
             GrossSales = grossSales,
             SalesReturns = salesReturns,
             NetSales = netSales,
-            CostOfGoodsSold = investment,
-            ProductPurchaseInvestment = investment,
+            CostOfGoodsSold = costOfGoodsSold,
+            ProductPurchaseInvestment = costOfGoodsSold,
             GrossProfit = grossProfit,
             Expenses = expenses,
             EmployeeCommissions = commissions,
             NetProfit = netProfit,
-            GrossMarginPercent = Percent(grossProfit, netSales),
-            NetMarginPercent = Percent(netProfit, netSales),
-            ReturnOnInvestmentPercent = Percent(netProfit, investment),
+            GrossMarginPercent = Percent(grossProfit, Math.Max(netSales, 0m)),
+            NetMarginPercent = Percent(netProfit, Math.Max(netSales, 0m)),
+            ReturnOnInvestmentPercent = Percent(netProfit, Math.Max(costOfGoodsSold, 0m)),
             UncostedQuantity = uncostedQuantity
         };
     }

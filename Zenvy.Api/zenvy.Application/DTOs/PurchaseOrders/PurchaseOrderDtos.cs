@@ -9,7 +9,7 @@ public class PurchaseOrderRequest
     public string PONumber { get; set; } = string.Empty;
     public DateTime OrderDate { get; set; } = DateTime.Now;
     public DateTime? ExpectedDate { get; set; }
-    public PurchaseOrderStatus Status { get; set; } = PurchaseOrderStatus.RECEIVED;
+    public PurchaseOrderStatus Status { get; set; } = PurchaseOrderStatus.PENDING;
     public string CreatedBy { get; set; } = string.Empty;
     public List<PurchaseOrderLineRequest> Lines { get; set; } = [];
     public List<ExpenseRequestExt> Expenses { get; set; } = [];

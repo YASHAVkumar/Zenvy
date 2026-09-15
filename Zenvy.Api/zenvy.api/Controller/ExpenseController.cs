@@ -5,7 +5,7 @@ using zenvy.application.Interfaces.Services;
 
 namespace zenvy.api.Controller;
 
-[Authorize, ApiController, Route("api/v{version:apiVersion}/expense-types")]
+[Authorize(Roles = "Admin,Manager,Accountant,TeamLead"), ApiController, Route("api/v{version:apiVersion}/expense-types")]
 public class ExpenseTypeController(IExpenseService service) : ControllerBase
 {
     [HttpPost]
@@ -19,7 +19,7 @@ public class ExpenseTypeController(IExpenseService service) : ControllerBase
     public async Task<IActionResult> GetAll() => Ok(await service.GetTypesAsync());
 }
 
-[Authorize, ApiController, Route("api/v{version:apiVersion}/expenses")]
+[Authorize(Roles = "Admin,Manager,Accountant,TeamLead"), ApiController, Route("api/v{version:apiVersion}/expenses")]
 public class ExpenseController(IExpenseService service) : ControllerBase
 {
     [HttpPost]
@@ -27,6 +27,7 @@ public class ExpenseController(IExpenseService service) : ControllerBase
     {
         if (request.Amount <= 0) return BadRequest("Amount must be greater than zero.");
         if (request.POId <= 0) return BadRequest("POId must be greater than zero.");
+        if (request.ExpenseTypeId <= 0) return BadRequest("ExpenseTypeId must be greater than zero.");
         if (!Guid.TryParse(request.CreatedBy, out _)) return BadRequest("CreatedBy must be a valid GUID.");
         return Ok(new { ExpenseId = await service.CreateExpenseAsync(request) });
     }
