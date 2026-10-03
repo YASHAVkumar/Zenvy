@@ -35,6 +35,7 @@ public class AuthController(IAuthService authService, IUserService userService) 
         return response is null ? Unauthorized(new { message = "Refresh token is invalid or expired." }) : Ok(response);
     }
 
+    [Authorize]
     [HttpPost("revoke")]
     public async Task<IActionResult> Revoke([FromBody] RefreshTokenRequest request)
     {

@@ -96,7 +96,7 @@ public sealed class AuthServiceTests
         var token = new RefreshToken { UserId = user.UserId, TokenHash = "hash", ExpiresAt = DateTime.UtcNow.AddMinutes(5) };
         _users.Setup(x => x.GetRefreshTokenAsync(It.IsAny<string>())).ReturnsAsync(token);
         _users.Setup(x => x.GetByIdAsync(Guid.Parse(user.UserId))).ReturnsAsync(user);
-        _users.Setup(x => x.RevokeRefreshTokenAsync(It.IsAny<string>(), It.IsAny<DateTime>())).Returns(Task.CompletedTask);
+        _users.Setup(x => x.TryRevokeRefreshTokenAsync(It.IsAny<string>(), It.IsAny<DateTime>())).ReturnsAsync(true);
         _users.Setup(x => x.AddRefreshTokenAsync(It.IsAny<RefreshToken>())).Returns(Task.CompletedTask);
         _jwt.Setup(x => x.GenerateToken(user)).Returns("new-access-token");
 
@@ -106,8 +106,26 @@ public sealed class AuthServiceTests
         Assert.True(result!.Success);
         Assert.Equal("new-access-token", result.Token);
         Assert.NotEmpty(result.RefreshToken);
-        _users.Verify(x => x.RevokeRefreshTokenAsync(It.IsAny<string>(), It.IsAny<DateTime>()), Times.Once);
+        _users.Verify(x => x.TryRevokeRefreshTokenAsync(It.IsAny<string>(), It.IsAny<DateTime>()), Times.Once);
         _users.Verify(x => x.AddRefreshTokenAsync(It.Is<RefreshToken>(item => item.TokenHash != "hash")), Times.Once);
+    }
+
+    [Fact]
+    public async Task RefreshAsync_does_not_issue_a_second_token_when_another_request_already_consumed_it()
+    {
+        var user = ActiveUser();
+        _users.Setup(x => x.GetRefreshTokenAsync(It.IsAny<string>())).ReturnsAsync(new RefreshToken
+        {
+            UserId = user.UserId, TokenHash = "hash", ExpiresAt = DateTime.UtcNow.AddMinutes(5)
+        });
+        _users.Setup(x => x.GetByIdAsync(Guid.Parse(user.UserId))).ReturnsAsync(user);
+        _users.Setup(x => x.TryRevokeRefreshTokenAsync(It.IsAny<string>(), It.IsAny<DateTime>())).ReturnsAsync(false);
+
+        var result = await CreateSubject().RefreshAsync("already-consumed-token");
+
+        Assert.Null(result);
+        _jwt.Verify(x => x.GenerateToken(It.IsAny<User>()), Times.Never);
+        _users.Verify(x => x.AddRefreshTokenAsync(It.IsAny<RefreshToken>()), Times.Never);
     }
 
     [Fact]

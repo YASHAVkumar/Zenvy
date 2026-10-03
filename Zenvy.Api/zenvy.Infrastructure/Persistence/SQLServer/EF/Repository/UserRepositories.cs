@@ -23,6 +23,11 @@ namespace zenvy.infrastructure.Persistence.SqlServer.EF.Repository
             throw new NotImplementedException();
         }
 
+        public Task<bool> TryRevokeRefreshTokenAsync(string tokenHash, DateTime revokedAt)
+        {
+            throw new NotImplementedException();
+        }
+
         Task IUserRepository.AddAsync(User user)
         {
             throw new NotImplementedException();

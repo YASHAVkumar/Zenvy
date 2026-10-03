@@ -2,12 +2,18 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const persistedUser = localStorage.getItem('zenvy_user');
 const persistedToken = localStorage.getItem('zenvy_token');
+let parsedUser = null;
+try {
+  parsedUser = persistedUser ? JSON.parse(persistedUser) : null;
+} catch {
+  localStorage.removeItem('zenvy_user');
+}
 
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
     token: persistedToken,
-    user: persistedUser ? JSON.parse(persistedUser) : null,
+    user: parsedUser,
     isAuthenticated: Boolean(persistedToken),
     loading: false,
     error: null,

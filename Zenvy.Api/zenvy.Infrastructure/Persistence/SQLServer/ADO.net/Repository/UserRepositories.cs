@@ -259,5 +259,20 @@ namespace zenvy.infrastructure.Persistence.SqlServer.ADO.net.Repository
             connection.Open(); command.ExecuteNonQuery();
             return Task.CompletedTask;
         }
+
+        public Task<bool> TryRevokeRefreshTokenAsync(string tokenHash, DateTime revokedAt)
+        {
+            using var connection = new SqlConnection(sqlConnectionString);
+            using var command = connection.CreateCommand();
+            // The expiry predicate makes a token unusable even if a cleanup job has not removed it yet.
+            command.CommandText = @"UPDATE RefreshTokens
+                SET RevokedAt = @RevokedAt
+                WHERE TokenHash = @TokenHash AND RevokedAt IS NULL AND ExpiresAt > @Now";
+            command.Parameters.AddWithValue("@TokenHash", tokenHash);
+            command.Parameters.AddWithValue("@RevokedAt", revokedAt);
+            command.Parameters.AddWithValue("@Now", DateTime.UtcNow);
+            connection.Open();
+            return Task.FromResult(command.ExecuteNonQuery() == 1);
+        }
     }
 }

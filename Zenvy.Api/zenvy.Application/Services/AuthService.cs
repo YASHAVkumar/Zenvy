@@ -79,10 +79,13 @@ public class AuthService : IAuthService
         var hash = HashRefreshToken(refreshToken);
         var stored = await _userRepository.GetRefreshTokenAsync(hash);
         if (stored is null || stored.RevokedAt is not null || stored.ExpiresAt <= DateTime.UtcNow) return null;
-        var user = await _userRepository.GetByIdAsync(Guid.Parse(stored.UserId));
+        if (!Guid.TryParse(stored.UserId, out var userId)) return null;
+        var user = await _userRepository.GetByIdAsync(userId);
         if (user is null || !user.IsActive) return null;
 
-        await _userRepository.RevokeRefreshTokenAsync(hash, DateTime.UtcNow);
+        // Rotation must consume the old credential atomically. A read followed by an
+        // unconditional update allows two simultaneous refresh calls to both succeed.
+        if (!await _userRepository.TryRevokeRefreshTokenAsync(hash, DateTime.UtcNow)) return null;
         var replacement = CreateRefreshToken(user.UserId);
         await _userRepository.AddRefreshTokenAsync(replacement.Record);
         return new LoginResponse

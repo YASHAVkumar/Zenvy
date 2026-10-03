@@ -6,7 +6,7 @@ import router from './routes/AppRoutes';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import { isAccessTokenExpired, refreshSession } from './lib/api';
+import { clearStoredSession, isAccessTokenExpired, refreshSession } from './lib/api';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -18,8 +18,9 @@ const renderApplication = () => root.render(
   </Provider>
 );
 
-if (localStorage.getItem('zenvy_refresh_token') && isAccessTokenExpired()) {
-  refreshSession().finally(renderApplication);
+if (isAccessTokenExpired()) {
+  const restore = localStorage.getItem('zenvy_refresh_token') ? refreshSession() : Promise.resolve(clearStoredSession());
+  restore.finally(renderApplication);
 } else {
   renderApplication();
 }

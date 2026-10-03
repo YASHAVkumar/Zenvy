@@ -21,6 +21,8 @@ namespace zenvy.application.Interfaces.Repositories
         Task<bool> ChaangePasswordAsync(Guid userId, string newPasswordHash);
         Task AddRefreshTokenAsync(RefreshToken refreshToken);
         Task<RefreshToken?> GetRefreshTokenAsync(string tokenHash);
+        /// <summary>Consumes a refresh token once. Returns false when another request already consumed it.</summary>
+        Task<bool> TryRevokeRefreshTokenAsync(string tokenHash, DateTime revokedAt);
         Task RevokeRefreshTokenAsync(string tokenHash, DateTime revokedAt);
     }
 }
