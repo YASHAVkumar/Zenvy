@@ -146,3 +146,5 @@ app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapGet("/",()=>"Hello World");
 app.Run();
+
+public partial class Program;

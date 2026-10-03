@@ -39,6 +39,9 @@ ScaffoldingReadMe.txt
 # dotenv environment variables file
 .env
 
+# JavaScript dependencies are restored from package-lock.json.
+node_modules/
+
 # Others
 ~$*
 *~

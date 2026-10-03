@@ -4,4 +4,5 @@
   <Project Path="zenvy.domain/zenvy.domain.csproj" />
   <Project Path="zenvy.infrastructure/zenvy.infrastructure.csproj" />
   <Project Path="zenvy.shared/zenvy.shared.csproj" />
+  <Project Path="zenvy.tests/zenvy.tests.csproj" />
 </Solution>
