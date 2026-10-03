@@ -30,6 +30,7 @@ namespace zenvy.domain.Entities
 
     public class ProductVariants
     {
+        public int VariantId { get; set; }
         public string SKU { get; set; }
         public string Barcode { get; set; }
         public string Size { get; set; }

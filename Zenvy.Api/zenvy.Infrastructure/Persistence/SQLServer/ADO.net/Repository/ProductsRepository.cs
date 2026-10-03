@@ -584,6 +584,7 @@ WHERE ProductMasterId=@ProductMasterId;", connection, transaction))
 
         using var command = new SqlCommand(@"
         SELECT
+            pv.VariantId,
             pv.SKU,
             pv.Barcode,
             pv.Size,
@@ -613,39 +614,45 @@ WHERE ProductMasterId=@ProductMasterId;", connection, transaction))
         {
             variants.Add(new ProductVariants
             {
-                SKU = reader.IsDBNull(0) ? string.Empty : reader.GetString(0),
-                Barcode = reader.IsDBNull(1) ? string.Empty : reader.GetString(1),
-                Size = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
-                Color = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
-                Material = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
-                Gender = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
-                Season = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
-                Status = !reader.IsDBNull(7) && reader.GetBoolean(7),
+                VariantId = reader.GetInt32(0),
+                SKU = ReadText(reader, 1),
+                Barcode = ReadText(reader, 2),
+                Size = ReadText(reader, 3),
+                Color = ReadText(reader, 4),
+                Material = ReadText(reader, 5),
+                Gender = ReadText(reader, 6),
+                Season = ReadText(reader, 7),
+                Status = !reader.IsDBNull(8) && reader.GetBoolean(8),
 
                 ProductVariantPrice = new ProductVariantPrice
                 {
-                    CostPrice = reader.IsDBNull(8) ? 0 : reader.GetDecimal(8),
-                    SalePrice = reader.IsDBNull(9) ? 0 : reader.GetDecimal(9),
-                    EffectiveFrom = reader.IsDBNull(10)
+                    CostPrice = reader.IsDBNull(9) ? 0 : reader.GetDecimal(9),
+                    SalePrice = reader.IsDBNull(10) ? 0 : reader.GetDecimal(10),
+                    EffectiveFrom = reader.IsDBNull(11)
                         ? DateTime.MinValue
-                        : reader.GetDateTime(10),
-                    EffectiveTo = reader.IsDBNull(11)
-                        ? null
                         : reader.GetDateTime(11),
-                    PlatformFee = reader.IsDBNull(12)
+                    EffectiveTo = reader.IsDBNull(12)
+                        ? null
+                        : reader.GetDateTime(12),
+                    PlatformFee = reader.IsDBNull(13)
                         ? 0
-                        : reader.GetDecimal(12),
-                    Discount = reader.IsDBNull(13)
+                        : reader.GetDecimal(13),
+                    Discount = reader.IsDBNull(14)
                         ? 0
-                        : reader.GetInt32(13),
-                    DiscountType = reader.IsDBNull(14)
+                        : reader.GetInt32(14),
+                    DiscountType = reader.IsDBNull(15)
                         ? string.Empty
-                        : reader.GetString(14)
+                        : ReadText(reader, 15)
                 }
             });
         }
 
         return variants;
+    }
+
+    private static string ReadText(SqlDataReader reader, int ordinal)
+    {
+        return reader.IsDBNull(ordinal) ? string.Empty : Convert.ToString(reader.GetValue(ordinal)) ?? string.Empty;
     }
     private static async Task<List<ProductImages>> GetImagesAsync(SqlConnection connection, int productMasterId)
     {

@@ -28,6 +28,8 @@ builder.Services.AddControllers(options => options.Filters.Add<ApiResponseFilter
         };
     });
 
+builder.Services.AddMemoryCache();
+
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 builder.Services.AddSignalR();
@@ -35,7 +37,7 @@ builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
     var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-        ?? ["http://localhost:5173", "http://127.0.0.1:5173"];
+        ?? ["http://localhost:5173", "http://127.0.0.1:5173","http://172.20.10.3:5173"];
     options.AddPolicy("Frontend", policy => policy
         .WithOrigins(allowedOrigins)
         .AllowAnyHeader()
@@ -138,6 +140,7 @@ app.UseCors("Frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<InMemoryResponseCacheMiddleware>();
 
 app.MapControllers();
 app.MapHub<NotificationHub>("/hubs/notifications");

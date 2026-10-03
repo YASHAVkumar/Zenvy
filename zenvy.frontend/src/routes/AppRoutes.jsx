@@ -16,6 +16,7 @@ import AdminPage from '../pages/AdminPage';
 import ManualPage from '../pages/ManualPage';
 import CompensationPage from '../pages/CompensationPage';
 import ProfitDistributionPage from '../pages/ProfitDistributionPage';
+import SalesDeskPage from '../pages/SalesDeskPage';
 import { RoleRoute } from './RoleRoute';
 
 const router = createBrowserRouter([
@@ -42,6 +43,7 @@ const router = createBrowserRouter([
           { path: 'compensation', element: <RoleRoute roles={['Admin', 'Manager', 'Accountant']}><CompensationPage /></RoleRoute> },
           { path: 'profit-distribution', element: <RoleRoute roles={['Admin', 'Manager', 'Accountant']}><ProfitDistributionPage /></RoleRoute> },
           { path: 'products', element: <ProductsPage /> },
+          { path: 'sales-desk', element: <SalesDeskPage /> },
           { path: 'admin', element: <AdminPage /> },
           { path: 'manual', element: <ManualPage /> },
         ],

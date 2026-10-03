@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Boxes, Database, FileText, GitBranch, LayoutDashboard, LogOut, Package, ShieldCheck, WalletCards, Users, Coins } from 'lucide-react';
+import { Banknote, Boxes, Database, FileText, GitBranch, LayoutDashboard, LogOut, Package, ShieldCheck, WalletCards, Users, Coins } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSignalR } from '../signalr/signalrProvider';
 import { logout } from '../features/auth/authSlice';
@@ -14,6 +14,7 @@ const navigation = [
   { to: '/compensation', label: 'Compensation', icon: Users, roles: ['Admin', 'Manager', 'Accountant'] },
   { to: '/profit-distribution', label: 'Profit distribution', icon: Coins, roles: ['Admin', 'Manager', 'Accountant'] },
   { to: '/products', label: 'Products', icon: Package },
+  { to: '/sales-desk', label: 'Sales desk', icon: Banknote, roles: ['Admin', 'Manager', 'SalesPerson', 'TeamLead'] },
   { to: '/admin', label: 'People & access', icon: ShieldCheck, roles: ['Admin'] },
   { to: '/manual', label: 'Role manual', icon: FileText },
 ];
