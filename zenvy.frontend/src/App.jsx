@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getAccessTokenRefreshDelay, getStoredUser, refreshSession } from './lib/api';
+import { getAccessTokenRefreshDelay, refreshSession } from './lib/api';
 import { logout, setAuth } from './features/auth/authSlice';
 
 const App = () => {
@@ -10,13 +10,13 @@ const App = () => {
 
 	useEffect(() => {
 		const handleTokenRefresh = (event) => {
-			dispatch(setAuth({ token: event.detail.token, user: event.detail.user || getStoredUser() }));
+			dispatch(setAuth({ token: event.detail.token }));
 		};
 		const handleUnauthorized = () => dispatch(logout());
 		const handleStorage = (event) => {
-			if (event.key && !['zenvy_token', 'zenvy_refresh_token', 'zenvy_user'].includes(event.key)) return;
+			if (event.key && !['zenvy_token', 'zenvy_refresh_token'].includes(event.key)) return;
 			const latestToken = localStorage.getItem('zenvy_token');
-			if (latestToken) dispatch(setAuth({ token: latestToken, user: getStoredUser() }));
+			if (latestToken) dispatch(setAuth({ token: latestToken }));
 			else dispatch(logout());
 		};
 		window.addEventListener('zenvy:token-refreshed', handleTokenRefresh);

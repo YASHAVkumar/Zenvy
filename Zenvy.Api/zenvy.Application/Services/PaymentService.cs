@@ -15,4 +15,9 @@ public class PaymentService(IPaymentRepository paymentRepository) : IPaymentServ
     {
         return paymentRepository.GetAllAsync();
     }
+
+    public Task<bool> UpdateStatusAsync(long paymentId, string status, string? transactionRef)
+    {
+        return paymentRepository.UpdateStatusAsync(paymentId, status, transactionRef);
+    }
 }

@@ -7,6 +7,15 @@ import authSlice from '../features/auth/authSlice';
 import api from '../lib/api';
 import LoginPage from './LoginPage';
 
+const roleClaim = 'http://schemas.microsoft.com/ws/2008/06/identity/claims/role';
+const userIdClaim = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier';
+const nameClaim = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
+const emailClaim = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress';
+const accessToken = `header.${btoa(JSON.stringify({
+  [userIdClaim]: 'u-1', [nameClaim]: 'Asha Rao', [emailClaim]: 'asha@example.com', [roleClaim]: 'Admin',
+  exp: Math.floor(Date.now() / 1000) + 900,
+}))}.signature`;
+
 jest.mock('../lib/api', () => ({
   __esModule: true,
   default: { post: jest.fn() },
@@ -32,7 +41,7 @@ describe('LoginPage', () => {
   it('signs in, persists the session, and navigates to the dashboard', async () => {
     const user = userEvent.setup();
     api.post.mockResolvedValue({ data: {
-      token: 'access-token', refreshToken: 'refresh-token', userId: 'u-1', fullName: 'Asha', email: 'asha@example.com', role: 'Admin',
+      token: accessToken, refreshToken: 'refresh-token', userId: 'spoofed', fullName: 'Wrong Name', email: 'wrong@example.com', role: 'Manager',
     } });
     renderPage();
 
@@ -42,8 +51,8 @@ describe('LoginPage', () => {
 
     await waitFor(() => expect(screen.getByText('Dashboard')).toBeInTheDocument());
     expect(api.post).toHaveBeenCalledWith('/api/v1/auth/login', { email: 'asha@example.com', password: 'password' });
-    expect(localStorage.getItem('zenvy_token')).toBe('access-token');
-    expect(JSON.parse(localStorage.getItem('zenvy_user'))).toMatchObject({ userId: 'u-1', role: 'Admin' });
+    expect(localStorage.getItem('zenvy_token')).toBe(accessToken);
+    expect(localStorage.getItem('zenvy_user')).toBeNull();
   });
 
   it('shows a request error when login fails', async () => {

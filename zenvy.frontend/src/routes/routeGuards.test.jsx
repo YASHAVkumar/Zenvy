@@ -54,4 +54,12 @@ describe('route guards', () => {
 
     expect(screen.getByText('Admin page')).toBeInTheDocument();
   });
+
+  it('redirects users whose token role is not permitted for a protected route', () => {
+    useSelector.mockImplementation((selector) => selector({ auth: { user: { roles: ['Accountant'] } } }));
+
+    renderAt('/private', <RoleRoute roles={['Admin']}><p>Admin page</p></RoleRoute>);
+
+    expect(screen.getByText('Dashboard page')).toBeInTheDocument();
+  });
 });

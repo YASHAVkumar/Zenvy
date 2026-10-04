@@ -11,6 +11,7 @@ public class SalesOrderRequest
     public DateTime OrderDate { get; set; } = DateTime.Now;
     public OrderStatus Status { get; set; } = OrderStatus.CONFIRMED;
     public decimal ShippingFee { get; set; }
+    public decimal AdditionalFee { get; set; }
     public List<SalesOrderLineRequest> Lines { get; set; } = [];
     public int PaymentMethodId { get; set; }
     public string? ReferenceId { get; set; }
@@ -41,6 +42,7 @@ public class SalesOrderResponse
     public decimal Discount { get; set; }
     public decimal Tax { get; set; }
     public decimal ShippingFee { get; set; }
+    public decimal AdditionalFee { get; set; }
     public decimal GrandTotal { get; set; }
     public DateTime CreatedAt { get; set; }
     public List<SalesOrderLineResponse> Lines { get; set; } = [];

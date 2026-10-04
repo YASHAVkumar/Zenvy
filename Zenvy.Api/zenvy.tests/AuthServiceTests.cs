@@ -6,6 +6,7 @@ using zenvy.application.DTOs.Auth;
 using zenvy.application.Interfaces.Repositories;
 using zenvy.application.Interfaces.Services;
 using zenvy.domain.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace zenvy.tests;
 

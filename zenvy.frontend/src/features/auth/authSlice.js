@@ -1,28 +1,24 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { getUserFromAccessToken } from './tokenClaims';
 
-const persistedUser = localStorage.getItem('zenvy_user');
 const persistedToken = localStorage.getItem('zenvy_token');
-let parsedUser = null;
-try {
-  parsedUser = persistedUser ? JSON.parse(persistedUser) : null;
-} catch {
-  localStorage.removeItem('zenvy_user');
-}
+localStorage.removeItem('zenvy_user');
+const persistedUser = getUserFromAccessToken(persistedToken);
 
 const authSlice = createSlice({
   name: 'auth',
   initialState: {
     token: persistedToken,
-    user: parsedUser,
-    isAuthenticated: Boolean(persistedToken),
+    user: persistedUser,
+    isAuthenticated: Boolean(persistedToken && persistedUser),
     loading: false,
     error: null,
   },
   reducers: {
     setAuth: (state, action) => {
       state.token = action.payload.token;
-      state.user = action.payload.user;
-      state.isAuthenticated = true;
+      state.user = getUserFromAccessToken(action.payload.token);
+      state.isAuthenticated = Boolean(state.token && state.user);
       state.loading = false;
       state.error = null;
     },

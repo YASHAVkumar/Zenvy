@@ -53,6 +53,18 @@ public class PaymentRepository(IConfiguration configuration) : IPaymentRepositor
         return payments;
     }
 
+    public async Task<bool> UpdateStatusAsync(long paymentId, string status, string? transactionRef)
+    {
+        using var connection = new SqlConnection(sqlConnectionString);
+        await connection.OpenAsync();
+
+        using var command = CreateStoredProcedureCommand("usp_UpdatePaymentStatus", connection);
+        command.Parameters.AddWithValue("@PaymentId", paymentId);
+        command.Parameters.AddWithValue("@Status", status);
+        command.Parameters.AddWithValue("@TransactionRef", (object?)transactionRef ?? DBNull.Value);
+        return Convert.ToBoolean(await command.ExecuteScalarAsync());
+    }
+
     private static SqlCommand CreateStoredProcedureCommand(string procedureName, SqlConnection connection)
     {
         return new SqlCommand(procedureName, connection) { CommandType = CommandType.StoredProcedure };

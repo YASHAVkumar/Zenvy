@@ -25,6 +25,7 @@ public class SalesOrderRepository(IConfiguration configuration) : ISalesOrderRep
         command.Parameters.AddWithValue("@OrderDate", request.OrderDate);
         command.Parameters.AddWithValue("@Status", EnumMappings.GetOrderStatusValue(request.Status));
         command.Parameters.AddWithValue("@ShippingFee", request.ShippingFee);
+        command.Parameters.AddWithValue("@AdditionalFee", request.AdditionalFee);
         command.Parameters.AddWithValue("@LinesJson", JsonSerializer.Serialize(request.Lines));
         command.Parameters.AddWithValue("@PaymentMethodId", request.PaymentMethodId);
         command.Parameters.AddWithValue("@ReferenceId", (object?)request.ReferenceId ?? DBNull.Value);
@@ -108,6 +109,7 @@ public class SalesOrderRepository(IConfiguration configuration) : ISalesOrderRep
             Discount = reader.GetDecimal(reader.GetOrdinal("Discount")),
             Tax = reader.GetDecimal(reader.GetOrdinal("Tax")),
             ShippingFee = reader.GetDecimal(reader.GetOrdinal("ShippingFee")),
+            AdditionalFee = reader.GetDecimal(reader.GetOrdinal("AdditionalFee")),
             GrandTotal = reader.GetDecimal(reader.GetOrdinal("GrandTotal")),
             CreatedAt = reader.GetDateTime(reader.GetOrdinal("CreatedAt"))
         };

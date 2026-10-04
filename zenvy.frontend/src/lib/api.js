@@ -1,37 +1,20 @@
 import axios from 'axios';
+import { decodeJwtPayload, getUserFromAccessToken } from '../features/auth/tokenClaims';
 
 let refreshRequest = null;
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 const refreshUrl = `${apiBaseUrl}/api/v1/auth/refresh`;
 
-export const getStoredUser = () => {
-  try {
-    const value = localStorage.getItem('zenvy_user');
-    return value ? JSON.parse(value) : null;
-  } catch {
-    localStorage.removeItem('zenvy_user');
-    return null;
-  }
-};
-
 export const isAccessTokenExpired = (token = localStorage.getItem('zenvy_token')) => {
   if (!token) return true;
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-    return !payload.exp || payload.exp * 1000 <= Date.now() + 30_000;
-  } catch {
-    return true;
-  }
+  const expiresAt = Number(decodeJwtPayload(token)?.exp) * 1000;
+  return !Number.isFinite(expiresAt) || expiresAt <= Date.now() + 30_000;
 };
 
 export const getAccessTokenRefreshDelay = (token = localStorage.getItem('zenvy_token')) => {
   if (!token) return 0;
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-    return Math.max(0, (Number(payload.exp) * 1000) - Date.now() - 30_000);
-  } catch {
-    return 0;
-  }
+  const expiresAt = Number(decodeJwtPayload(token)?.exp) * 1000;
+  return Number.isFinite(expiresAt) ? Math.max(0, expiresAt - Date.now() - 30_000) : 0;
 };
 
 export const clearStoredSession = () => {
@@ -50,16 +33,15 @@ export const refreshSession = async () => {
   refreshRequest ||= axios.post(refreshUrl, { refreshToken })
     .then((response) => {
       const payload = response.data?.data ?? response.data;
-      if (payload?.success === false || !payload?.token || !payload?.refreshToken) {
+      const token = payload?.accessToken || payload?.token;
+      const user = getUserFromAccessToken(token);
+      if (payload?.success === false || !token || !payload?.refreshToken || !user?.role) {
         throw new Error('Refresh token response is invalid');
       }
-      localStorage.setItem('zenvy_token', payload.token);
+      localStorage.removeItem('zenvy_user');
+      localStorage.setItem('zenvy_token', token);
       localStorage.setItem('zenvy_refresh_token', payload.refreshToken);
-      const user = payload.userId ? {
-        userId: payload.userId, fullName: payload.fullName, email: payload.email, role: payload.role,
-      } : getStoredUser();
-      if (user) localStorage.setItem('zenvy_user', JSON.stringify(user));
-      window.dispatchEvent(new CustomEvent('zenvy:token-refreshed', { detail: { token: payload.token, user } }));
+      window.dispatchEvent(new CustomEvent('zenvy:token-refreshed', { detail: { token } }));
       return true;
     })
     .catch(() => {
@@ -80,8 +62,8 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(async (config) => {
-  const isAuthRequest = config.url?.includes('/auth/');
-  if (!isAuthRequest && isAccessTokenExpired()) {
+  const isPublicAuthRequest = /\/auth\/(?:login|refresh|signup(?:\/|$))/.test(config.url || '');
+  if (!isPublicAuthRequest && isAccessTokenExpired()) {
     const refreshed = await refreshSession();
     if (!refreshed) return Promise.reject(new Error('Your session has expired. Please sign in again.'));
   }
@@ -108,7 +90,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       const refreshToken = localStorage.getItem('zenvy_refresh_token');
       const isRefreshCall = error.config?.url?.includes('/auth/refresh');
-      if (refreshToken && !isRefreshCall && !error.config?._retry) {
+      const isPublicAuthRequest = /\/auth\/(?:login|refresh|signup(?:\/|$))/.test(error.config?.url || '');
+      if (refreshToken && !isRefreshCall && !isPublicAuthRequest && !error.config?._retry) {
         error.config._retry = true;
         return refreshSession().then((refreshed) => {
           if (!refreshed) return Promise.reject(new Error('Your session has expired. Please sign in again.'));
@@ -116,7 +99,7 @@ api.interceptors.response.use(
           return api.request(error.config);
         });
       }
-      clearStoredSession();
+      if (!isPublicAuthRequest) clearStoredSession();
     }
     const responseData = error.response?.data;
     const validationDetails = responseData?.errors && typeof responseData.errors === 'object'

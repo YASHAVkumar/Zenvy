@@ -21,7 +21,7 @@ export default function () {
   check(root, { 'root responds 200': (response) => response.status === 200 });
 
   if (token) {
-    const categories = http.get(`${baseUrl}/api/v1/categories`, {
+    const categories = http.get(`${baseUrl}/api/v1/products`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     check(categories, {

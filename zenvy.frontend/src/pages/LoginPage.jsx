@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { setAuth } from '../features/auth/authSlice';
+import { getUserFromAccessToken } from '../features/auth/tokenClaims';
 
 const LoginPage = () => {
   const dispatch = useDispatch();
@@ -27,17 +28,14 @@ const LoginPage = () => {
         return;
       }
       const { data } = await api.post('/api/v1/auth/login', { email: form.email, password: form.password });
-      if (!data?.token) throw new Error(data?.message || 'Login failed');
-      const user = {
-        userId: data.userId,
-        fullName: data.fullName,
-        email: data.email,
-        role: data.role,
-      };
-      localStorage.setItem('zenvy_token', data.token);
+      const token = data?.accessToken || data?.token;
+      if (!token || !data?.refreshToken) throw new Error(data?.message || 'Login response did not include valid session tokens.');
+      const user = getUserFromAccessToken(token);
+      if (!user?.role) throw new Error('Login response did not include valid identity and role claims.');
+      localStorage.removeItem('zenvy_user');
+      localStorage.setItem('zenvy_token', token);
       localStorage.setItem('zenvy_refresh_token', data.refreshToken);
-      localStorage.setItem('zenvy_user', JSON.stringify(user));
-      dispatch(setAuth({ token: data.token, user }));
+      dispatch(setAuth({ token }));
       navigate('/dashboard', { replace: true });
     } catch (loginError) {
       setRequestError(loginError.message);

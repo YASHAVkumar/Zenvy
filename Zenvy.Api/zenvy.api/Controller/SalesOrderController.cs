@@ -18,6 +18,8 @@ public class SalesOrderController(ISalesOrderService salesOrderService) : Contro
         if (request.Lines == null || request.Lines.Count == 0) return BadRequest("At least one sales line is required.");
         if (request.Lines.Any(line => line.VariantId <= 0 || line.Qty <= 0 || line.UnitPrice < 0 || line.Discount < 0 || line.Tax < 0))
             return BadRequest("Each sales line must have a valid variant, positive quantity, and non-negative pricing values.");
+        if (request.ShippingFee < 0 || request.AdditionalFee < 0)
+            return BadRequest("Transport and additional fees must be non-negative.");
         if (!Guid.TryParse(request.CreatedBy, out _)) return BadRequest("CreatedBy must be a valid GUID.");
 
         var orderId = await salesOrderService.CreateSalesOrderAsync(request);

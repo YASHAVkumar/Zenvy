@@ -10,6 +10,7 @@ export const SignalRProvider = ({ children }) => {
   const [connected, setConnected] = useState(false);
   const [lastResourceChange, setLastResourceChange] = useState(null);
   const [lastInventoryChange, setLastInventoryChange] = useState(null);
+  const [lastPaymentChange, setLastPaymentChange] = useState(null);
   const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
@@ -44,16 +45,21 @@ export const SignalRProvider = ({ children }) => {
       setLastInventoryChange(event);
       setNotifications((previous) => [{ id: `${Date.now()}-${Math.random()}`, title: 'Inventory changed', message: `${event.actor || 'A team member'} updated stock.`, at: new Date() }, ...previous].slice(0, 20));
     });
+    connection.on(signalrEvents.ON_PAYMENT_STATUS_CHANGED, (event) => {
+      setLastPaymentChange(event);
+      setNotifications((previous) => [{ id: `${Date.now()}-${Math.random()}`, title: 'Payment status updated', message: `Payment ${event.paymentId} is now ${event.status}.`, at: new Date() }, ...previous].slice(0, 20));
+    });
 
     return () => {
       connection.off(signalrEvents.ON_RECEIVE_MESSAGE, onReceiveMessage);
       connection.off(signalrEvents.ON_RESOURCE_CHANGED, setLastResourceChange);
       connection.off(signalrEvents.ON_INVENTORY_CHANGED);
+      connection.off(signalrEvents.ON_PAYMENT_STATUS_CHANGED);
     };
   }, [connection]);
 
   return (
-    <SignalRContext.Provider value={{ messages, connection, connected, lastResourceChange, lastInventoryChange, notifications, dismissNotification: (id) => setNotifications((previous) => previous.filter((item) => item.id !== id)) }}>
+    <SignalRContext.Provider value={{ messages, connection, connected, lastResourceChange, lastInventoryChange, lastPaymentChange, notifications, dismissNotification: (id) => setNotifications((previous) => previous.filter((item) => item.id !== id)) }}>
       {children}
     </SignalRContext.Provider>
   );

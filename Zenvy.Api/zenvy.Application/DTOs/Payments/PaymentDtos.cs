@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace zenvy.application.DTOs.Payments;
 
 public class PaymentRequest
@@ -20,4 +22,12 @@ public class PaymentResponse
     public string? TransactionRef { get; set; }
     public string? Status { get; set; }
     public DateTime PaymentDate { get; set; }
+}
+
+public class PaymentStatusUpdateRequest
+{
+    public string Status { get; set; } = string.Empty;
+
+    [StringLength(200)]
+    public string? TransactionRef { get; set; }
 }

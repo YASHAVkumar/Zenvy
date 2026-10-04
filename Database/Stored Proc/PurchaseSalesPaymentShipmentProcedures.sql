@@ -286,6 +286,7 @@ CREATE OR ALTER PROCEDURE dbo.usp_CreateSalesOrder
     @OrderDate DATETIME2,
     @Status NVARCHAR(50),
     @ShippingFee DECIMAL(18,2) = 0,
+    @AdditionalFee DECIMAL(18,2) = 0,
     @LinesJson NVARCHAR(MAX),
     @PaymentMethodId nvarchar(200),
     @ReferenceId nvarchar(200)=NULL,
@@ -324,6 +325,9 @@ BEGIN
 
     IF EXISTS (SELECT 1 FROM @Lines WHERE Qty <= 0 OR UnitPrice < 0 OR Discount < 0 OR Tax < 0)
         THROW 50111, 'Sales order line values are invalid.', 1;
+
+    IF @ShippingFee < 0 OR @AdditionalFee < 0
+        THROW 50115, 'Transport and additional fees must be non-negative.', 1;
 
     DECLARE @Sold TABLE
     (
@@ -368,15 +372,15 @@ BEGIN
         @SubTotal = SUM(Qty * UnitPrice),
         @Discount = SUM(Discount),
         @Tax = SUM(Tax),
-        @GrandTotal = SUM((Qty * UnitPrice) - Discount + Tax) + @ShippingFee
+        @GrandTotal = SUM((Qty * UnitPrice) - Discount + Tax) + @ShippingFee + @AdditionalFee
     FROM @Lines;
 
     BEGIN TRANSACTION;
 
     INSERT INTO SalesOrders
-        (CustomerId, ChannelId, CreatedBy, ExternalOrderId, OrderDate, Status, SubTotal, Discount, Tax, ShippingFee, GrandTotal)
+        (CustomerId, ChannelId, CreatedBy, ExternalOrderId, OrderDate, Status, SubTotal, Discount, Tax, ShippingFee, AdditionalFee, GrandTotal)
     VALUES
-        (@CustomerId, @ChannelId, @CreatedBy, @ExternalOrderId, @OrderDate, @Status, @SubTotal, @Discount, @Tax, @ShippingFee, @GrandTotal);
+        (@CustomerId, @ChannelId, @CreatedBy, @ExternalOrderId, @OrderDate, @Status, @SubTotal, @Discount, @Tax, @ShippingFee, @AdditionalFee, @GrandTotal);
 
     SET @OrderId = SCOPE_IDENTITY();
 
@@ -427,6 +431,7 @@ BEGIN
         so.Discount,
         so.Tax,
         so.ShippingFee,
+        so.AdditionalFee,
         so.GrandTotal,
         so.CreatedAt
     FROM SalesOrders so
@@ -456,6 +461,7 @@ BEGIN
         so.Discount,
         so.Tax,
         so.ShippingFee,
+        so.AdditionalFee,
         so.GrandTotal,
         so.CreatedAt
     FROM SalesOrders so
@@ -518,6 +524,23 @@ BEGIN
     FROM Payments p
     INNER JOIN PaymentMethods pm ON pm.PaymentMethodId = p.PaymentMethodId
     ORDER BY p.PaymentId DESC;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE dbo.usp_UpdatePaymentStatus
+    @PaymentId BIGINT,
+    @Status NVARCHAR(50),
+    @TransactionRef NVARCHAR(200) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE Payments
+    SET Status = @Status,
+        TransactionRef = COALESCE(@TransactionRef, TransactionRef)
+    WHERE PaymentId = @PaymentId;
+
+    SELECT CONVERT(BIT, CASE WHEN @@ROWCOUNT = 0 THEN 0 ELSE 1 END);
 END;
 GO
 
