@@ -37,7 +37,7 @@ builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
     var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-        ?? ["http://localhost:5173", "http://127.0.0.1:5173","http://172.20.10.3:5173"];
+        ?? ["http://localhost:5173", "http://127.0.0.1:5173","http://172.20.10.3:5173","http://192.168.0.103:8082"];
     options.AddPolicy("Frontend", policy => policy
         .WithOrigins(allowedOrigins)
         .AllowAnyHeader()

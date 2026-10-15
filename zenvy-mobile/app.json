@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "Zenvy Mobile",
+    "slug": "zenvy-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#F7F8FC"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.zenvy.mobile"
+    },
+    "plugins": [
+      "expo-status-bar",
+      "expo-asset"
+    ]
+  }
+}

@@ -9,6 +9,8 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import { clearStoredSession, isAccessTokenExpired, refreshSession } from './lib/api';
 
+localStorage.removeItem('zenvy_user');
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 const renderApplication = () => root.render(
